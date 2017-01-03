@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strengths Friender</title>
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
+  <link rel='stylesheet' href='https://fonts.googleapis.com/icon?family=Material+Icons'>
+  <link rel='stylesheet' href='https://code.getmdl.io/1.3.0/material.deep_purple-light_green.min.css'>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <script src="bundle.js"></script>
+  <script>
+
+    var friendList = localStorage.getItem('friendList')
+    var viewState = localStorage.getItem('viewState')
+
+    var app = Elm.Main.fullscreen({
+      friendList: friendList,
+      viewState: viewState
+    })
+
+    app.ports.saveFriendList.subscribe( function(json) {
+      var string = JSON.stringify(json)
+      console.log('Saving friendList to localStorage:', string)
+      localStorage.setItem('friendList', string)
+    })
+
+    app.ports.saveViewState.subscribe( function(json) {
+      var string = JSON.stringify(json)
+      console.log('Saving viewState to localStorage:', string)
+      localStorage.setItem('viewState', string)
+    })
+
+  </script>
+</body>
+
+</html>

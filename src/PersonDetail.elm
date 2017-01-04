@@ -4,314 +4,311 @@ import Navigation
 import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes exposing (..)
+
 import Dict exposing (Dict)
-import StrengthField
+
 import Material
 import Material.Textfield as Textfield
 import Material.Options as Options
 import Material.Button as Button
 
+import StrengthField
 
--- model
+
+
+{-- MODEL --}
 
 
 type alias Model =
-    { person : Person
-    , strengthInputs : Dict Int StrengthField.Model
-    , mdl : Material.Model
-    }
+  { person : Person
+  , strengthInputs : Dict Int StrengthField.Model
+  , mdl : Material.Model
+  }
 
 
 type alias Person =
-    { id : Int
-    , name : String
-    , strengths : Maybe String
-    }
+  { id : Int
+  , name : String
+  , strengths : Maybe String
+  }
 
 
 init : Int -> ( Model, Cmd Msg )
 init currentId =
-    let
-        ( fieldModel, cmd ) =
-            StrengthField.init
-    in
-        ( { person = initPerson currentId
-          , strengthInputs =
-                Dict.fromList
-                    (List.indexedMap (,) (List.repeat 5 fieldModel))
-          , mdl = Material.model
-          }
-        , Cmd.none
-        )
+  let
+    ( fieldModel, cmd ) =
+      StrengthField.init
+
+    initInputs =
+      Dict.fromList
+        (List.indexedMap (,) (List.repeat 5 fieldModel))
+  in
+    ( { person = initPerson currentId
+      , strengthInputs = initInputs
+      , mdl = Material.model
+      }
+    , Cmd.none
+    )
 
 
 initPerson : Int -> Person
 initPerson currentId =
-    { id = currentId
-    , name = ""
-    , strengths = Nothing
-    }
+  { id = currentId
+  , name = ""
+  , strengths = Nothing
+  }
 
 
 initWith : Person -> ( Model, Cmd Msg )
 initWith person =
-    let
-        model =
-            { person = person
-            , strengthInputs = injectAllStrengths person.strengths
-            , mdl = Material.model
-            }
-    in
-        ( model, Cmd.none )
+  ( { person = person
+    , strengthInputs = injectAllStrengths person.strengths
+    , mdl = Material.model
+    }
+  , Cmd.none
+  )
 
 
 
--- update
+-- UPDATE
 
 
 type Msg
-    = NameInput String
-    | StrengthFieldMsg Int StrengthField.Msg
-    | Delete
-    | Save
-    | Mdl (Material.Msg Msg)
+  = NameInput String
+  | StrengthFieldMsg Int StrengthField.Msg
+  | Delete
+  | Save
+  | Mdl (Material.Msg Msg)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        NameInput name ->
-            let
-                person =
-                    model.person
+  case msg of
+    NameInput name ->
+      let
+        person = model.person
+        newPerson = { person | name = name }
+      in
+        ( { model | person = newPerson }, Cmd.none )
 
-                newPerson =
-                    { person | name = name }
-            in
-                ( { model | person = newPerson }, Cmd.none )
+    StrengthFieldMsg index childMsg ->
+      case Dict.get index model.strengthInputs of
+        Nothing ->
+          ( model, Cmd.none )
 
-        StrengthFieldMsg index childMsg ->
-            case Dict.get index model.strengthInputs of
-                Nothing ->
-                    ( model, Cmd.none )
+        Just strength ->
+          let
+            ( newFieldModel, cmd ) =
+              StrengthField.update childMsg strength
 
-                Just strength ->
-                    let
-                        ( newFieldModel, cmd ) =
-                            StrengthField.update childMsg strength
+            newStrengths =
+              Dict.insert index newFieldModel model.strengthInputs
+          in
+            ( { model | strengthInputs = newStrengths }, Cmd.none )
 
-                        newStrengths =
-                            Dict.insert index newFieldModel model.strengthInputs
-                    in
-                        ( { model | strengthInputs = newStrengths }, Cmd.none )
+    Delete ->
+      ( model, Navigation.newUrl "/" )
 
-        Delete ->
-            ( model, Navigation.newUrl "/" )
+    Save ->
+      save model
 
-        Save ->
-            save model
-
-        Mdl msg_ ->
-            Material.update msg_ model
+    Mdl msg_ ->
+      Material.update msg_ model
 
 
 save : Model -> ( Model, Cmd Msg )
 save model =
-    let
-        newFieldModels =
-            validateAllFields model
+  let
+    newFieldModels =
+      validateAllFields model
 
-        newStrengthsCode =
-            extractAllCodes newFieldModels
+    newStrengthsCode =
+      extractAllCodes newFieldModels
 
-        person =
-            model.person
+    person = model.person
+    newPerson = { person | strengths = newStrengthsCode }
 
-        newPerson =
-            { person | strengths = newStrengthsCode }
-
-        cmds =
-            if isAllFieldsValid newFieldModels then
-                Navigation.newUrl "/"
-            else
-                Cmd.none
-    in
-        ( { model
-            | person = newPerson
-            , strengthInputs = newFieldModels
-          }
-        , cmds
-        )
+    cmds =
+      if isAllFieldsValid newFieldModels then
+        Navigation.newUrl "/"
+      else
+        Cmd.none
+  in
+    ( { model
+      | person = newPerson
+      , strengthInputs = newFieldModels
+      }
+    , cmds
+    )
 
 
 validateAllFields : Model -> Dict Int StrengthField.Model
 validateAllFields model =
-    let
-        validateFieldModel strength =
-            let
-                ( fieldModel, cmd ) =
-                    StrengthField.update StrengthField.Validate strength
-            in
-                fieldModel
-    in
-        Dict.map (\_ strength -> validateFieldModel strength) model.strengthInputs
+  let
+    validateFieldModel strength =
+      let
+        ( fieldModel, cmd ) =
+          StrengthField.update StrengthField.Validate strength
+      in
+        fieldModel
+  in
+    Dict.map (\_ strength -> validateFieldModel strength) model.strengthInputs
 
 
 isAllFieldsValid : Dict Int StrengthField.Model -> Bool
 isAllFieldsValid fields =
-    fields
-        |> Dict.toList
-        |> List.all isFieldValid
+  fields
+    |> Dict.toList
+    |> List.all isFieldValid
 
 
 isFieldValid : ( Int, StrengthField.Model ) -> Bool
 isFieldValid ( id, model ) =
-    model.validation
-        |> Tuple.first
+  model.validation
+    |> Tuple.first
 
 
 extractAllCodes : Dict Int StrengthField.Model -> Maybe String
 extractAllCodes fields =
-    if isAllFieldsValid fields then
-        Just (getCodes fields)
-    else
-        Nothing
+  if isAllFieldsValid fields
+    then Just (getCodes fields)
+    else Nothing
 
 
 getCodes : Dict Int StrengthField.Model -> String
 getCodes fields =
-    let
-        extractCode strength =
-            strength.validation
-                |> Tuple.second
-                |> Maybe.withDefault ""
+  let
+    extractCode strength =
+      strength.validation
+        |> Tuple.second
+        |> Maybe.withDefault ""
 
-        calculate index strength result =
-            result ++ (extractCode strength)
-    in
-        Dict.foldl calculate "" fields
+    calculate index strength result =
+      result ++ (extractCode strength)
+  in
+    Dict.foldl calculate "" fields
 
 
 injectAllStrengths : Maybe String -> Dict Int StrengthField.Model
 injectAllStrengths strengthCode =
-    case strengthCode of
-        Nothing ->
-            let
-                ( fieldModel, cmd ) =
-                    StrengthField.init
-            in
-                Dict.fromList
-                    (List.indexedMap (,) (List.repeat 5 fieldModel))
+  case strengthCode of
+    Nothing ->
+      let
+        ( fieldModel, cmd ) =
+          StrengthField.init
+      in
+        Dict.fromList
+          (List.indexedMap (,) (List.repeat 5 fieldModel))
 
-        Just code ->
-            let
-                index =
-                    List.range 0 4
+    Just code ->
+      let
+        index =
+          List.range 0 4
 
-                codes =
-                    code
-                        |> String.toList
-                        |> List.map injectStrength
+        codes =
+          code
+            |> String.toList
+            |> List.map injectStrength
 
-                indexWithCodes =
-                    List.map2 (,) index codes
-            in
-                Dict.fromList indexWithCodes
+        indexWithCodes =
+          List.map2 (,) index codes
+      in
+        Dict.fromList indexWithCodes
 
 
 injectStrength : Char -> StrengthField.Model
 injectStrength code =
-    let
-        ( fieldModel, cmd ) =
-            StrengthField.initWith code
-    in
-        fieldModel
+  let
+    ( fieldModel, cmd ) =
+      StrengthField.initWith code
+  in
+    fieldModel
 
 
 
--- view
+{-- VIEW --}
 
 
 (=>) : a -> b -> ( a, b )
 (=>) =
-    (,)
+  (,)
 
 
 view : Model -> Html Msg
 view model =
-    div [ style [ "padding" => "20px" ] ]
-        ([ div []
-            [ Textfield.render Mdl
-                [ 0 ]
-                model.mdl
-                [ Textfield.label "Name"
-                , Textfield.floatingLabel
-                , Textfield.onInput NameInput
-                , Textfield.value <| model.person.name
-                , Textfield.autofocus
-                , Options.css "width" "100%"
-                ]
+  div [ style [ "padding" => "20px" ] ]
+    ([ div []
+      [ Textfield.render Mdl
+        [ 0 ]
+        model.mdl
+        [ Textfield.label "Name"
+        , Textfield.floatingLabel
+        , Textfield.onInput NameInput
+        , Textfield.value <| model.person.name
+        , Textfield.autofocus
+        , Options.css "width" "100%"
+        ]
+      ]
+     ]
+      ++ (model.strengthInputs |> Dict.toList |> List.map wrappedField)
+      ++ [ div [ style [ "display" => "flex", "justify-content" => "space-between" ] ]
+          [ Button.render Mdl
+            [ 0 ]
+            model.mdl
+            [ Button.raised
+            , Button.ripple
+            , Button.onClick Delete
             ]
+            [ text "Delete" ]
+          , Button.render Mdl
+            [ 1 ]
+            model.mdl
+            [ Button.raised
+            , Button.colored
+            , Button.ripple
+            , Button.onClick Save
+            ]
+            [ text "Save" ]
+          ]
          ]
-            ++ (model.strengthInputs |> Dict.toList |> List.map wrappedField)
-            ++ [ div [ style [ "display" => "flex", "justify-content" => "space-between" ] ]
-                    [ Button.render Mdl
-                        [ 0 ]
-                        model.mdl
-                        [ Button.raised
-                        , Button.ripple
-                        , Button.onClick Delete
-                        ]
-                        [ text "Delete" ]
-                    , Button.render Mdl
-                        [ 1 ]
-                        model.mdl
-                        [ Button.raised
-                        , Button.colored
-                        , Button.ripple
-                        , Button.onClick Save
-                        ]
-                        [ text "Save" ]
-                    ]
-               ]
-        )
+    )
 
 
 wrappedField : ( Int, StrengthField.Model ) -> Html Msg
 wrappedField ( id, model ) =
-    let
-        ordinal =
-            getOrdinalNumber id
-    in
-        Html.map (StrengthFieldMsg id) <| StrengthField.view model ordinal
+  let
+    ordinal =
+      getOrdinalNumber id
+  in
+    Html.map (StrengthFieldMsg id) <| StrengthField.view model ordinal
 
 
 getOrdinalNumber : Int -> String
 getOrdinalNumber number =
-    case number of
-        0 ->
-            "First"
+  case number of
+    0 ->
+      "First"
 
-        1 ->
-            "Second"
+    1 ->
+      "Second"
 
-        2 ->
-            "Third"
+    2 ->
+      "Third"
 
-        3 ->
-            "Fourth"
+    3 ->
+      "Fourth"
 
-        4 ->
-            "Fifth"
+    4 ->
+      "Fifth"
 
-        _ ->
-            ""
+    _ ->
+      ""
 
 
 
--- subscriptions
+{-- SUBSCRIPTIONS --}
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+  Sub.none

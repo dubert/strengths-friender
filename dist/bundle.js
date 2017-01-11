@@ -19389,6 +19389,17 @@ var _elm_lang$navigation$Navigation$subMap = F2(
 	});
 _elm_lang$core$Native_Platform.effectManagers['Navigation'] = {pkg: 'elm-lang/navigation', init: _elm_lang$navigation$Navigation$init, onEffects: _elm_lang$navigation$Navigation$onEffects, onSelfMsg: _elm_lang$navigation$Navigation$onSelfMsg, tag: 'fx', cmdMap: _elm_lang$navigation$Navigation$cmdMap, subMap: _elm_lang$navigation$Navigation$subMap};
 
+var _dubert$strengths_friender$Types$Person = F3(
+	function (a, b, c) {
+		return {id: a, name: b, strengths: c};
+	});
+var _dubert$strengths_friender$Types$Flags = F2(
+	function (a, b) {
+		return {friendList: a, viewState: b};
+	});
+var _dubert$strengths_friender$Types$Collapsed = {ctor: 'Collapsed'};
+var _dubert$strengths_friender$Types$Expanded = {ctor: 'Expanded'};
+
 var _dubert$strengths_friender$Strengths$clean = function (text) {
 	return _elm_lang$core$String$trim(
 		_elm_lang$core$String$toLower(text));
@@ -20425,6 +20436,294 @@ var _dubert$strengths_friender$Strengths$Strength = F3(
 		return {id: a, name: b, info: c};
 	});
 
+var _dubert$strengths_friender$FriendList$subscriptions = function (model) {
+	return _elm_lang$core$Platform_Sub$none;
+};
+var _dubert$strengths_friender$FriendList$strengthsInfo = function (person) {
+	var listOfStrengths = A2(
+		_elm_lang$core$String$join,
+		', ',
+		_dubert$strengths_friender$Strengths$getStrengthNameListFromCodex(person.strengths));
+	return A2(
+		_MichaelCombs28$elm_mdl$Material_List$subtitle,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text(listOfStrengths),
+			_1: {ctor: '[]'}
+		});
+};
+var _dubert$strengths_friender$FriendList_ops = _dubert$strengths_friender$FriendList_ops || {};
+_dubert$strengths_friender$FriendList_ops['=>'] = F2(
+	function (v0, v1) {
+		return {ctor: '_Tuple2', _0: v0, _1: v1};
+	});
+var _dubert$strengths_friender$FriendList$insertId = function (_p0) {
+	var _p1 = _p0;
+	return _elm_lang$core$Native_Utils.update(
+		_p1._1,
+		{id: _p1._0});
+};
+var _dubert$strengths_friender$FriendList$makePerson = F2(
+	function (name, maybeCodex) {
+		var codex = _elm_lang$core$Native_Utils.eq(maybeCodex, '') ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(maybeCodex);
+		return {id: 0, name: name, strengths: codex};
+	});
+var _dubert$strengths_friender$FriendList$decodeFriend = A3(
+	_elm_lang$core$Json_Decode$map2,
+	_dubert$strengths_friender$FriendList$makePerson,
+	A2(_elm_lang$core$Json_Decode$field, 'n', _elm_lang$core$Json_Decode$string),
+	A2(_elm_lang$core$Json_Decode$field, 's', _elm_lang$core$Json_Decode$string));
+var _dubert$strengths_friender$FriendList$decodeFriends = function (json) {
+	var jsonList = A2(
+		_elm_lang$core$Json_Decode$decodeString,
+		_elm_lang$core$Json_Decode$list(_dubert$strengths_friender$FriendList$decodeFriend),
+		json);
+	var indexedList = function () {
+		var _p2 = jsonList;
+		if (_p2.ctor === 'Ok') {
+			return A2(
+				_elm_lang$core$List$indexedMap,
+				F2(
+					function (v0, v1) {
+						return {ctor: '_Tuple2', _0: v0, _1: v1};
+					}),
+				_p2._0);
+		} else {
+			return {ctor: '[]'};
+		}
+	}();
+	return A2(_elm_lang$core$List$map, _dubert$strengths_friender$FriendList$insertId, indexedList);
+};
+var _dubert$strengths_friender$FriendList$create = function (model) {
+	var newId = model.nextId + 1;
+	var newPerson = A3(_dubert$strengths_friender$Types$Person, model.nextId, '', _elm_lang$core$Maybe$Nothing);
+	var newFriends = {ctor: '::', _0: newPerson, _1: model.friends};
+	return {
+		ctor: '_Tuple2',
+		_0: _elm_lang$core$Native_Utils.update(
+			model,
+			{
+				friends: newFriends,
+				selected: _elm_lang$core$Maybe$Just(model.nextId),
+				nextId: newId
+			}),
+		_1: _elm_lang$navigation$Navigation$newUrl('#add')
+	};
+};
+var _dubert$strengths_friender$FriendList$update = F2(
+	function (msg, model) {
+		var _p3 = msg;
+		switch (_p3.ctor) {
+			case 'Create':
+				return _dubert$strengths_friender$FriendList$create(model);
+			case 'Select':
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							selected: _elm_lang$core$Maybe$Just(_p3._0.id)
+						}),
+					_1: _elm_lang$navigation$Navigation$newUrl('#add')
+				};
+			case 'Save':
+				var _p4 = _p3._0;
+				var newFriends = A2(
+					_elm_lang$core$List$map,
+					function (friend) {
+						return _elm_lang$core$Native_Utils.eq(friend.id, _p4.id) ? _elm_lang$core$Native_Utils.update(
+							friend,
+							{name: _p4.name, strengths: _p4.strengths}) : friend;
+					},
+					model.friends);
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{friends: newFriends, selected: _elm_lang$core$Maybe$Nothing}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'Delete':
+				var newFriends = A2(
+					_elm_lang$core$List$filter,
+					function (f) {
+						return !_elm_lang$core$Native_Utils.eq(f.id, _p3._0.id);
+					},
+					model.friends);
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{friends: newFriends, selected: _elm_lang$core$Maybe$Nothing}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'Undo':
+				var newFriends = {ctor: '::', _0: _p3._0, _1: model.friends};
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{friends: newFriends, selected: _elm_lang$core$Maybe$Nothing}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			default:
+				return A2(_MichaelCombs28$elm_mdl$Material$update, _p3._0, model);
+		}
+	});
+var _dubert$strengths_friender$FriendList$init = function (flags) {
+	var initFriends = function () {
+		var _p5 = flags.friendList;
+		if (_p5.ctor === 'Nothing') {
+			return {ctor: '[]'};
+		} else {
+			return _dubert$strengths_friender$FriendList$decodeFriends(_p5._0);
+		}
+	}();
+	var initModel = {
+		friends: initFriends,
+		selected: _elm_lang$core$Maybe$Nothing,
+		nextId: _elm_lang$core$List$length(initFriends),
+		viewState: _dubert$strengths_friender$Types$Expanded,
+		mdl: _MichaelCombs28$elm_mdl$Material$model
+	};
+	return {ctor: '_Tuple2', _0: initModel, _1: _elm_lang$core$Platform_Cmd$none};
+};
+var _dubert$strengths_friender$FriendList$Model = F5(
+	function (a, b, c, d, e) {
+		return {friends: a, selected: b, nextId: c, viewState: d, mdl: e};
+	});
+var _dubert$strengths_friender$FriendList$Mdl = function (a) {
+	return {ctor: 'Mdl', _0: a};
+};
+var _dubert$strengths_friender$FriendList$Undo = function (a) {
+	return {ctor: 'Undo', _0: a};
+};
+var _dubert$strengths_friender$FriendList$Delete = function (a) {
+	return {ctor: 'Delete', _0: a};
+};
+var _dubert$strengths_friender$FriendList$Save = function (a) {
+	return {ctor: 'Save', _0: a};
+};
+var _dubert$strengths_friender$FriendList$Select = function (a) {
+	return {ctor: 'Select', _0: a};
+};
+var _dubert$strengths_friender$FriendList$personView = F3(
+	function (viewState, model, person) {
+		var _p6 = viewState;
+		if (_p6.ctor === 'Collapsed') {
+			return A2(
+				_MichaelCombs28$elm_mdl$Material_List$li,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: A2(
+						_MichaelCombs28$elm_mdl$Material_List$content,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(person.name),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A5(
+							_MichaelCombs28$elm_mdl$Material_Button$render,
+							_dubert$strengths_friender$FriendList$Mdl,
+							{
+								ctor: '::',
+								_0: person.id,
+								_1: {ctor: '[]'}
+							},
+							model.mdl,
+							{
+								ctor: '::',
+								_0: _MichaelCombs28$elm_mdl$Material_Button$icon,
+								_1: {
+									ctor: '::',
+									_0: _MichaelCombs28$elm_mdl$Material_Button$onClick(
+										_dubert$strengths_friender$FriendList$Select(person)),
+									_1: {ctor: '[]'}
+								}
+							},
+							{
+								ctor: '::',
+								_0: _MichaelCombs28$elm_mdl$Material_Icon$i('create'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
+				});
+		} else {
+			return A2(
+				_MichaelCombs28$elm_mdl$Material_List$li,
+				{
+					ctor: '::',
+					_0: _MichaelCombs28$elm_mdl$Material_List$withSubtitle,
+					_1: {ctor: '[]'}
+				},
+				{
+					ctor: '::',
+					_0: A2(
+						_MichaelCombs28$elm_mdl$Material_List$content,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(person.name),
+							_1: {
+								ctor: '::',
+								_0: _dubert$strengths_friender$FriendList$strengthsInfo(person),
+								_1: {ctor: '[]'}
+							}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A5(
+							_MichaelCombs28$elm_mdl$Material_Button$render,
+							_dubert$strengths_friender$FriendList$Mdl,
+							{
+								ctor: '::',
+								_0: person.id,
+								_1: {ctor: '[]'}
+							},
+							model.mdl,
+							{
+								ctor: '::',
+								_0: _MichaelCombs28$elm_mdl$Material_Button$icon,
+								_1: {
+									ctor: '::',
+									_0: _MichaelCombs28$elm_mdl$Material_Button$onClick(
+										_dubert$strengths_friender$FriendList$Select(person)),
+									_1: {ctor: '[]'}
+								}
+							},
+							{
+								ctor: '::',
+								_0: _MichaelCombs28$elm_mdl$Material_Icon$i('create'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
+				});
+		}
+	});
+var _dubert$strengths_friender$FriendList$view = F2(
+	function (model, viewState) {
+		return A2(
+			_MichaelCombs28$elm_mdl$Material_List$ul,
+			{ctor: '[]'},
+			A2(
+				_elm_lang$core$List$map,
+				A2(_dubert$strengths_friender$FriendList$personView, viewState, model),
+				A2(
+					_elm_lang$core$List$sortBy,
+					function (_) {
+						return _.name;
+					},
+					model.friends)));
+	});
+var _dubert$strengths_friender$FriendList$Create = {ctor: 'Create'};
+
 var _dubert$strengths_friender$StrengthField$publishError = function (model) {
 	var result = _dubert$strengths_friender$Strengths$getStrengthFromName(model.field);
 	var _p0 = result;
@@ -20789,10 +21088,6 @@ var _dubert$strengths_friender$PersonDetail$Model = F3(
 	function (a, b, c) {
 		return {person: a, strengthInputs: b, mdl: c};
 	});
-var _dubert$strengths_friender$PersonDetail$Person = F3(
-	function (a, b, c) {
-		return {id: a, name: b, strengths: c};
-	});
 var _dubert$strengths_friender$PersonDetail$Mdl = function (a) {
 	return {ctor: 'Mdl', _0: a};
 };
@@ -20967,288 +21262,6 @@ var _dubert$strengths_friender$PersonDetail$view = function (model) {
 				})));
 };
 
-var _dubert$strengths_friender$FriendList$subscriptions = function (model) {
-	return _elm_lang$core$Platform_Sub$none;
-};
-var _dubert$strengths_friender$FriendList$strengthsInfo = function (person) {
-	var listOfStrengths = A2(
-		_elm_lang$core$String$join,
-		', ',
-		_dubert$strengths_friender$Strengths$getStrengthNameListFromCodex(person.strengths));
-	return A2(
-		_MichaelCombs28$elm_mdl$Material_List$subtitle,
-		{ctor: '[]'},
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html$text(listOfStrengths),
-			_1: {ctor: '[]'}
-		});
-};
-var _dubert$strengths_friender$FriendList_ops = _dubert$strengths_friender$FriendList_ops || {};
-_dubert$strengths_friender$FriendList_ops['=>'] = F2(
-	function (v0, v1) {
-		return {ctor: '_Tuple2', _0: v0, _1: v1};
-	});
-var _dubert$strengths_friender$FriendList$insertId = function (_p0) {
-	var _p1 = _p0;
-	return _elm_lang$core$Native_Utils.update(
-		_p1._1,
-		{id: _p1._0});
-};
-var _dubert$strengths_friender$FriendList$makePerson = F2(
-	function (name, maybeCodex) {
-		var codex = _elm_lang$core$Native_Utils.eq(maybeCodex, '') ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(maybeCodex);
-		return {id: 0, name: name, strengths: codex};
-	});
-var _dubert$strengths_friender$FriendList$decodeFriend = A3(
-	_elm_lang$core$Json_Decode$map2,
-	_dubert$strengths_friender$FriendList$makePerson,
-	A2(_elm_lang$core$Json_Decode$field, 'n', _elm_lang$core$Json_Decode$string),
-	A2(_elm_lang$core$Json_Decode$field, 's', _elm_lang$core$Json_Decode$string));
-var _dubert$strengths_friender$FriendList$decodeFriends = function (json) {
-	var jsonList = A2(
-		_elm_lang$core$Json_Decode$decodeString,
-		_elm_lang$core$Json_Decode$list(_dubert$strengths_friender$FriendList$decodeFriend),
-		json);
-	var indexedList = function () {
-		var _p2 = jsonList;
-		if (_p2.ctor === 'Ok') {
-			return A2(
-				_elm_lang$core$List$indexedMap,
-				F2(
-					function (v0, v1) {
-						return {ctor: '_Tuple2', _0: v0, _1: v1};
-					}),
-				_p2._0);
-		} else {
-			return {ctor: '[]'};
-		}
-	}();
-	return A2(_elm_lang$core$List$map, _dubert$strengths_friender$FriendList$insertId, indexedList);
-};
-var _dubert$strengths_friender$FriendList$create = function (model) {
-	var newId = model.nextId + 1;
-	var newPerson = A3(_dubert$strengths_friender$PersonDetail$Person, model.nextId, '', _elm_lang$core$Maybe$Nothing);
-	var newFriends = {ctor: '::', _0: newPerson, _1: model.friends};
-	return {
-		ctor: '_Tuple2',
-		_0: _elm_lang$core$Native_Utils.update(
-			model,
-			{
-				friends: newFriends,
-				selected: _elm_lang$core$Maybe$Just(model.nextId),
-				nextId: newId
-			}),
-		_1: _elm_lang$navigation$Navigation$newUrl('#add')
-	};
-};
-var _dubert$strengths_friender$FriendList$update = F2(
-	function (msg, model) {
-		var _p3 = msg;
-		switch (_p3.ctor) {
-			case 'Create':
-				return _dubert$strengths_friender$FriendList$create(model);
-			case 'Select':
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							selected: _elm_lang$core$Maybe$Just(_p3._0.id)
-						}),
-					_1: _elm_lang$navigation$Navigation$newUrl('#add')
-				};
-			case 'Save':
-				var _p4 = _p3._0;
-				var newFriends = A2(
-					_elm_lang$core$List$map,
-					function (friend) {
-						return _elm_lang$core$Native_Utils.eq(friend.id, _p4.id) ? _elm_lang$core$Native_Utils.update(
-							friend,
-							{name: _p4.name, strengths: _p4.strengths}) : friend;
-					},
-					model.friends);
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{friends: newFriends, selected: _elm_lang$core$Maybe$Nothing}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'Delete':
-				var newFriends = A2(
-					_elm_lang$core$List$filter,
-					function (f) {
-						return !_elm_lang$core$Native_Utils.eq(f.id, _p3._0.id);
-					},
-					model.friends);
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{friends: newFriends, selected: _elm_lang$core$Maybe$Nothing}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			default:
-				return A2(_MichaelCombs28$elm_mdl$Material$update, _p3._0, model);
-		}
-	});
-var _dubert$strengths_friender$FriendList$Model = F5(
-	function (a, b, c, d, e) {
-		return {friends: a, selected: b, nextId: c, viewState: d, mdl: e};
-	});
-var _dubert$strengths_friender$FriendList$Flags = F2(
-	function (a, b) {
-		return {friendList: a, viewState: b};
-	});
-var _dubert$strengths_friender$FriendList$Collapsed = {ctor: 'Collapsed'};
-var _dubert$strengths_friender$FriendList$Expanded = {ctor: 'Expanded'};
-var _dubert$strengths_friender$FriendList$init = function (flags) {
-	var initFriends = function () {
-		var _p5 = flags.friendList;
-		if (_p5.ctor === 'Nothing') {
-			return {ctor: '[]'};
-		} else {
-			return _dubert$strengths_friender$FriendList$decodeFriends(_p5._0);
-		}
-	}();
-	var initModel = {
-		friends: initFriends,
-		selected: _elm_lang$core$Maybe$Nothing,
-		nextId: _elm_lang$core$List$length(initFriends),
-		viewState: _dubert$strengths_friender$FriendList$Expanded,
-		mdl: _MichaelCombs28$elm_mdl$Material$model
-	};
-	return {ctor: '_Tuple2', _0: initModel, _1: _elm_lang$core$Platform_Cmd$none};
-};
-var _dubert$strengths_friender$FriendList$Mdl = function (a) {
-	return {ctor: 'Mdl', _0: a};
-};
-var _dubert$strengths_friender$FriendList$Delete = function (a) {
-	return {ctor: 'Delete', _0: a};
-};
-var _dubert$strengths_friender$FriendList$Save = function (a) {
-	return {ctor: 'Save', _0: a};
-};
-var _dubert$strengths_friender$FriendList$Select = function (a) {
-	return {ctor: 'Select', _0: a};
-};
-var _dubert$strengths_friender$FriendList$personView = F3(
-	function (viewState, model, person) {
-		var _p6 = viewState;
-		if (_p6.ctor === 'Collapsed') {
-			return A2(
-				_MichaelCombs28$elm_mdl$Material_List$li,
-				{ctor: '[]'},
-				{
-					ctor: '::',
-					_0: A2(
-						_MichaelCombs28$elm_mdl$Material_List$content,
-						{ctor: '[]'},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text(person.name),
-							_1: {ctor: '[]'}
-						}),
-					_1: {
-						ctor: '::',
-						_0: A5(
-							_MichaelCombs28$elm_mdl$Material_Button$render,
-							_dubert$strengths_friender$FriendList$Mdl,
-							{
-								ctor: '::',
-								_0: person.id,
-								_1: {ctor: '[]'}
-							},
-							model.mdl,
-							{
-								ctor: '::',
-								_0: _MichaelCombs28$elm_mdl$Material_Button$icon,
-								_1: {
-									ctor: '::',
-									_0: _MichaelCombs28$elm_mdl$Material_Button$onClick(
-										_dubert$strengths_friender$FriendList$Select(person)),
-									_1: {ctor: '[]'}
-								}
-							},
-							{
-								ctor: '::',
-								_0: _MichaelCombs28$elm_mdl$Material_Icon$i('create'),
-								_1: {ctor: '[]'}
-							}),
-						_1: {ctor: '[]'}
-					}
-				});
-		} else {
-			return A2(
-				_MichaelCombs28$elm_mdl$Material_List$li,
-				{
-					ctor: '::',
-					_0: _MichaelCombs28$elm_mdl$Material_List$withSubtitle,
-					_1: {ctor: '[]'}
-				},
-				{
-					ctor: '::',
-					_0: A2(
-						_MichaelCombs28$elm_mdl$Material_List$content,
-						{ctor: '[]'},
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html$text(person.name),
-							_1: {
-								ctor: '::',
-								_0: _dubert$strengths_friender$FriendList$strengthsInfo(person),
-								_1: {ctor: '[]'}
-							}
-						}),
-					_1: {
-						ctor: '::',
-						_0: A5(
-							_MichaelCombs28$elm_mdl$Material_Button$render,
-							_dubert$strengths_friender$FriendList$Mdl,
-							{
-								ctor: '::',
-								_0: person.id,
-								_1: {ctor: '[]'}
-							},
-							model.mdl,
-							{
-								ctor: '::',
-								_0: _MichaelCombs28$elm_mdl$Material_Button$icon,
-								_1: {
-									ctor: '::',
-									_0: _MichaelCombs28$elm_mdl$Material_Button$onClick(
-										_dubert$strengths_friender$FriendList$Select(person)),
-									_1: {ctor: '[]'}
-								}
-							},
-							{
-								ctor: '::',
-								_0: _MichaelCombs28$elm_mdl$Material_Icon$i('create'),
-								_1: {ctor: '[]'}
-							}),
-						_1: {ctor: '[]'}
-					}
-				});
-		}
-	});
-var _dubert$strengths_friender$FriendList$view = F2(
-	function (model, viewState) {
-		return A2(
-			_MichaelCombs28$elm_mdl$Material_List$ul,
-			{ctor: '[]'},
-			A2(
-				_elm_lang$core$List$map,
-				A2(_dubert$strengths_friender$FriendList$personView, viewState, model),
-				A2(
-					_elm_lang$core$List$sortBy,
-					function (_) {
-						return _.name;
-					},
-					model.friends)));
-	});
-var _dubert$strengths_friender$FriendList$Create = {ctor: 'Create'};
-
 var _dubert$strengths_friender$Main$pageToHash = function (page) {
 	var _p0 = page;
 	switch (_p0.ctor) {
@@ -21281,14 +21294,14 @@ var _dubert$strengths_friender$Main$decodeViewState = function (json) {
 			var _p3 = _p2._0;
 			switch (_p3) {
 				case 'Expanded':
-					return _dubert$strengths_friender$FriendList$Expanded;
+					return _dubert$strengths_friender$Types$Expanded;
 				case 'Collapsed':
-					return _dubert$strengths_friender$FriendList$Collapsed;
+					return _dubert$strengths_friender$Types$Collapsed;
 				default:
-					return _dubert$strengths_friender$FriendList$Expanded;
+					return _dubert$strengths_friender$Types$Expanded;
 			}
 		} else {
-			return _dubert$strengths_friender$FriendList$Expanded;
+			return _dubert$strengths_friender$Types$Expanded;
 		}
 	}();
 	return viewState;
@@ -21343,8 +21356,8 @@ var _dubert$strengths_friender$Main$updateListFromPerson = F3(
 		}
 	});
 var _dubert$strengths_friender$Main$updateDetailFromList = F2(
-	function (msg, model) {
-		var _p7 = msg;
+	function (msgFriendList, model) {
+		var _p7 = msgFriendList;
 		if (_p7.ctor === 'Select') {
 			var _p8 = _dubert$strengths_friender$PersonDetail$initWith(_p7._0);
 			var newDetailModel = _p8._0;
@@ -21379,13 +21392,9 @@ var _dubert$strengths_friender$Main$saveViewState = _elm_lang$core$Native_Platfo
 	function (v) {
 		return v;
 	});
-var _dubert$strengths_friender$Main$Flags = F2(
-	function (a, b) {
-		return {friendList: a, viewState: b};
-	});
-var _dubert$strengths_friender$Main$Model = F5(
-	function (a, b, c, d, e) {
-		return {page: a, list: b, detail: c, viewState: d, mdl: e};
+var _dubert$strengths_friender$Main$Model = F6(
+	function (a, b, c, d, e, f) {
+		return {page: a, list: b, detail: c, viewState: d, snackbar: e, mdl: f};
 	});
 var _dubert$strengths_friender$Main$PersonDetailPage = {ctor: 'PersonDetailPage'};
 var _dubert$strengths_friender$Main$FriendListPage = {ctor: 'FriendListPage'};
@@ -21404,15 +21413,34 @@ var _dubert$strengths_friender$Main$hashToPage = function (hash) {
 var _dubert$strengths_friender$Main$Mdl = function (a) {
 	return {ctor: 'Mdl', _0: a};
 };
+var _dubert$strengths_friender$Main$Snackbar = function (a) {
+	return {ctor: 'Snackbar', _0: a};
+};
+var _dubert$strengths_friender$Main$issueSnackbar = F3(
+	function (msgPersonDetail, person, model) {
+		if (_elm_lang$core$Native_Utils.eq(msgPersonDetail, _dubert$strengths_friender$PersonDetail$Delete)) {
+			var text = A2(_elm_lang$core$Basics_ops['++'], person.name, ' successfully deleted');
+			var toast = A3(_MichaelCombs28$elm_mdl$Material_Snackbar$snackbar, person, text, 'UNDO');
+			var _p12 = A2(
+				_MichaelCombs28$elm_mdl$Material_Helpers$map2nd,
+				_elm_lang$core$Platform_Cmd$map(_dubert$strengths_friender$Main$Snackbar),
+				A2(_MichaelCombs28$elm_mdl$Material_Snackbar$add, toast, model.snackbar));
+			var snackbarModel = _p12._0;
+			var snackbarCmd = _p12._1;
+			return {ctor: '_Tuple2', _0: snackbarModel, _1: snackbarCmd};
+		} else {
+			return {ctor: '_Tuple2', _0: model.snackbar, _1: _elm_lang$core$Platform_Cmd$none};
+		}
+	});
 var _dubert$strengths_friender$Main$FriendListMsg = function (a) {
 	return {ctor: 'FriendListMsg', _0: a};
 };
 var _dubert$strengths_friender$Main$messageFromList = F2(
-	function (msg, model) {
-		var newDetailModel = A2(_dubert$strengths_friender$Main$updateDetailFromList, msg, model);
-		var _p12 = A2(_dubert$strengths_friender$FriendList$update, msg, model.list);
-		var newListModel = _p12._0;
-		var cmd = _p12._1;
+	function (msgFriendList, model) {
+		var newDetailModel = A2(_dubert$strengths_friender$Main$updateDetailFromList, msgFriendList, model);
+		var _p13 = A2(_dubert$strengths_friender$FriendList$update, msgFriendList, model.list);
+		var newListModel = _p13._0;
+		var cmd = _p13._1;
 		return {
 			ctor: '_Tuple2',
 			_0: _elm_lang$core$Native_Utils.update(
@@ -21427,24 +21455,25 @@ var _dubert$strengths_friender$Main$PersonDetailMsg = function (a) {
 var _dubert$strengths_friender$Main$init = F2(
 	function (flags, location) {
 		var viewState = function () {
-			var _p13 = flags.viewState;
-			if (_p13.ctor === 'Nothing') {
-				return _dubert$strengths_friender$FriendList$Expanded;
+			var _p14 = flags.viewState;
+			if (_p14.ctor === 'Nothing') {
+				return _dubert$strengths_friender$Types$Expanded;
 			} else {
-				return _dubert$strengths_friender$Main$decodeViewState(_p13._0);
+				return _dubert$strengths_friender$Main$decodeViewState(_p14._0);
 			}
 		}();
-		var _p14 = _dubert$strengths_friender$PersonDetail$init(0);
-		var personDetailModel = _p14._0;
-		var personDetailCmd = _p14._1;
-		var _p15 = _dubert$strengths_friender$FriendList$init(flags);
-		var friendListModel = _p15._0;
-		var friendListCmd = _p15._1;
+		var _p15 = _dubert$strengths_friender$PersonDetail$init(0);
+		var personDetailModel = _p15._0;
+		var personDetailCmd = _p15._1;
+		var _p16 = _dubert$strengths_friender$FriendList$init(flags);
+		var friendListModel = _p16._0;
+		var friendListCmd = _p16._1;
 		var initModel = {
 			page: _dubert$strengths_friender$Main$hashToPage(location.hash),
 			list: friendListModel,
 			detail: personDetailModel,
 			viewState: viewState,
+			snackbar: _MichaelCombs28$elm_mdl$Material_Snackbar$model,
 			mdl: _MichaelCombs28$elm_mdl$Material$model
 		};
 		return {
@@ -21463,18 +21492,21 @@ var _dubert$strengths_friender$Main$init = F2(
 		};
 	});
 var _dubert$strengths_friender$Main$messageFromPerson = F2(
-	function (msg, model) {
-		var _p16 = A2(_dubert$strengths_friender$PersonDetail$update, msg, model.detail);
-		var newDetailModel = _p16._0;
-		var cmd = _p16._1;
-		var newListModel = A3(_dubert$strengths_friender$Main$updateListFromPerson, msg, newDetailModel, model);
-		var saveCmd = _elm_lang$core$Native_Utils.eq(msg, _dubert$strengths_friender$PersonDetail$Save) ? _dubert$strengths_friender$Main$saveFriendList(
+	function (msgPersonDetail, model) {
+		var _p17 = A2(_dubert$strengths_friender$PersonDetail$update, msgPersonDetail, model.detail);
+		var newDetailModel = _p17._0;
+		var cmd = _p17._1;
+		var newListModel = A3(_dubert$strengths_friender$Main$updateListFromPerson, msgPersonDetail, newDetailModel, model);
+		var saveCmd = (_elm_lang$core$Native_Utils.eq(msgPersonDetail, _dubert$strengths_friender$PersonDetail$Save) || _elm_lang$core$Native_Utils.eq(msgPersonDetail, _dubert$strengths_friender$PersonDetail$Delete)) ? _dubert$strengths_friender$Main$saveFriendList(
 			_dubert$strengths_friender$Main$encodeFriends(newListModel)) : _elm_lang$core$Platform_Cmd$none;
+		var _p18 = A3(_dubert$strengths_friender$Main$issueSnackbar, msgPersonDetail, newDetailModel.person, model);
+		var newSnackbarModel = _p18._0;
+		var snackbarCmd = _p18._1;
 		return {
 			ctor: '_Tuple2',
 			_0: _elm_lang$core$Native_Utils.update(
 				model,
-				{list: newListModel, detail: newDetailModel}),
+				{list: newListModel, detail: newDetailModel, snackbar: newSnackbarModel}),
 			_1: _elm_lang$core$Platform_Cmd$batch(
 				{
 					ctor: '::',
@@ -21482,39 +21514,43 @@ var _dubert$strengths_friender$Main$messageFromPerson = F2(
 					_1: {
 						ctor: '::',
 						_0: saveCmd,
-						_1: {ctor: '[]'}
+						_1: {
+							ctor: '::',
+							_0: snackbarCmd,
+							_1: {ctor: '[]'}
+						}
 					}
 				})
 		};
 	});
 var _dubert$strengths_friender$Main$update = F2(
 	function (msg, model) {
-		var _p17 = msg;
-		switch (_p17.ctor) {
+		var _p19 = msg;
+		switch (_p19.ctor) {
 			case 'Navigate':
 				return {
 					ctor: '_Tuple2',
 					_0: model,
 					_1: _elm_lang$navigation$Navigation$newUrl(
-						_dubert$strengths_friender$Main$pageToHash(_p17._0))
+						_dubert$strengths_friender$Main$pageToHash(_p19._0))
 				};
 			case 'ChangePage':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{page: _p17._0}),
+						{page: _p19._0}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'Create':
 				return _dubert$strengths_friender$Main$create(model);
 			case 'ToggleViewState':
 				var newViewState = function () {
-					var _p18 = model.viewState;
-					if (_p18.ctor === 'Collapsed') {
-						return _dubert$strengths_friender$FriendList$Expanded;
+					var _p20 = model.viewState;
+					if (_p20.ctor === 'Collapsed') {
+						return _dubert$strengths_friender$Types$Expanded;
 					} else {
-						return _dubert$strengths_friender$FriendList$Collapsed;
+						return _dubert$strengths_friender$Types$Collapsed;
 					}
 				}();
 				var saveCmd = _dubert$strengths_friender$Main$saveViewState(
@@ -21527,11 +21563,41 @@ var _dubert$strengths_friender$Main$update = F2(
 					_1: saveCmd
 				};
 			case 'FriendListMsg':
-				return A2(_dubert$strengths_friender$Main$messageFromList, _p17._0, model);
+				return A2(_dubert$strengths_friender$Main$messageFromList, _p19._0, model);
 			case 'PersonDetailMsg':
-				return A2(_dubert$strengths_friender$Main$messageFromPerson, _p17._0, model);
+				return A2(_dubert$strengths_friender$Main$messageFromPerson, _p19._0, model);
+			case 'Snackbar':
+				if (_p19._0.ctor === 'Click') {
+					var _p21 = A2(
+						_dubert$strengths_friender$FriendList$update,
+						_dubert$strengths_friender$FriendList$Undo(_p19._0._0),
+						model.list);
+					var newListModel = _p21._0;
+					var listCmd = _p21._1;
+					var saveCmd = _dubert$strengths_friender$Main$saveFriendList(
+						_dubert$strengths_friender$Main$encodeFriends(newListModel));
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{list: newListModel}),
+						_1: saveCmd
+					};
+				} else {
+					return A2(
+						_MichaelCombs28$elm_mdl$Material_Helpers$map2nd,
+						_elm_lang$core$Platform_Cmd$map(_dubert$strengths_friender$Main$Snackbar),
+						A2(
+							_MichaelCombs28$elm_mdl$Material_Helpers$map1st,
+							function (s) {
+								return _elm_lang$core$Native_Utils.update(
+									model,
+									{snackbar: s});
+							},
+							A2(_MichaelCombs28$elm_mdl$Material_Snackbar$update, _p19._0, model.snackbar)));
+				}
 			default:
-				return A2(_MichaelCombs28$elm_mdl$Material$update, _p17._0, model);
+				return A2(_MichaelCombs28$elm_mdl$Material$update, _p19._0, model);
 		}
 	});
 var _dubert$strengths_friender$Main$subscriptions = function (model) {
@@ -21551,16 +21617,16 @@ var _dubert$strengths_friender$Main$subscriptions = function (model) {
 var _dubert$strengths_friender$Main$ToggleViewState = {ctor: 'ToggleViewState'};
 var _dubert$strengths_friender$Main$pageHeader = function (model) {
 	var label = function () {
-		var _p19 = model.viewState;
-		if (_p19.ctor === 'Collapsed') {
+		var _p22 = model.viewState;
+		if (_p22.ctor === 'Collapsed') {
 			return 'Show Strengths';
 		} else {
 			return 'Hide Strengths';
 		}
 	}();
 	var menu = function () {
-		var _p20 = model.page;
-		if (_p20.ctor === 'FriendListPage') {
+		var _p23 = model.page;
+		if (_p23.ctor === 'FriendListPage') {
 			return A5(
 				_MichaelCombs28$elm_mdl$Material_Menu$render,
 				_dubert$strengths_friender$Main$Mdl,
@@ -21628,8 +21694,8 @@ var _dubert$strengths_friender$Main$pageHeader = function (model) {
 };
 var _dubert$strengths_friender$Main$viewToggle = function (model) {
 	var buttonLabel = function () {
-		var _p21 = model.viewState;
-		if (_p21.ctor === 'Collapsed') {
+		var _p24 = model.viewState;
+		if (_p24.ctor === 'Collapsed') {
 			return 'Show Strengths';
 		} else {
 			return 'Hide Strengths';
@@ -21650,8 +21716,8 @@ var _dubert$strengths_friender$Main$viewToggle = function (model) {
 };
 var _dubert$strengths_friender$Main$Create = {ctor: 'Create'};
 var _dubert$strengths_friender$Main$addButton = function (model) {
-	var _p22 = model.page;
-	if (_p22.ctor === 'FriendListPage') {
+	var _p25 = model.page;
+	if (_p25.ctor === 'FriendListPage') {
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -21720,8 +21786,8 @@ var _dubert$strengths_friender$Main$addButton = function (model) {
 };
 var _dubert$strengths_friender$Main$view = function (model) {
 	var page = function () {
-		var _p23 = model.page;
-		switch (_p23.ctor) {
+		var _p26 = model.page;
+		switch (_p26.ctor) {
 			case 'FriendListPage':
 				return A2(
 					_elm_lang$html$Html$map,
@@ -21790,7 +21856,14 @@ var _dubert$strengths_friender$Main$view = function (model) {
 						_1: {
 							ctor: '::',
 							_0: _dubert$strengths_friender$Main$addButton(model),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$map,
+									_dubert$strengths_friender$Main$Snackbar,
+									_MichaelCombs28$elm_mdl$Material_Snackbar$view(model.snackbar)),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}),
@@ -21851,7 +21924,7 @@ var _dubert$strengths_friender$Main$Navigate = function (a) {
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
 if (typeof _dubert$strengths_friender$Main$main !== 'undefined') {
-    _dubert$strengths_friender$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Material.Ripple.Animation":{"args":[],"tags":{"Inert":[],"Frame":["Int"]}},"Dict.LeafColor":{"args":[],"tags":{"LBBlack":[],"LBlack":[]}},"Platform.Cmd.Cmd":{"args":["msg"],"tags":{"Cmd":[]}},"StrengthField.Msg":{"args":[],"tags":{"Input":["String"],"Mdl":["Material.Msg StrengthField.Msg"],"Validate":[]}},"PersonDetail.Msg":{"args":[],"tags":{"Mdl":["Material.Msg PersonDetail.Msg"],"StrengthFieldMsg":["Int","StrengthField.Msg"],"NameInput":["String"],"Delete":[],"Save":[]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":["Dict.LeafColor"]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Material.Snackbar.State":{"args":["a"],"tags":{"Active":["Material.Snackbar.Contents a"],"Inert":[],"Fading":["Material.Snackbar.Contents a"]}},"Main.Msg":{"args":[],"tags":{"ToggleViewState":[],"FriendListMsg":["FriendList.Msg"],"Create":[],"Navigate":["Main.Page"],"PersonDetailMsg":["PersonDetail.Msg"],"ChangePage":["Main.Page"],"Mdl":["Material.Msg Main.Msg"]}},"Dict.NColor":{"args":[],"tags":{"BBlack":[],"Red":[],"NBlack":[],"Black":[]}},"FriendList.Msg":{"args":[],"tags":{"Create":[],"Mdl":["Material.Msg FriendList.Msg"],"Select":["PersonDetail.Person"],"Delete":["PersonDetail.Person"],"Save":["PersonDetail.Person"]}},"Parts.Msg":{"args":["c","obs"],"tags":{"Msg":["c -> ( Maybe.Maybe c, Platform.Cmd.Cmd obs )"]}},"Main.Page":{"args":[],"tags":{"NotFound":[],"FriendListPage":[],"PersonDetailPage":[]}},"Material.Menu.AnimationState":{"args":[],"tags":{"Idle":[],"Opened":[],"Closing":[],"Opening":[]}}},"aliases":{"Material.Layout.TabScrollState":{"args":[],"type":"{ canScrollLeft : Bool , canScrollRight : Bool , width : Maybe.Maybe Int }"},"Material.Snackbar.Contents":{"args":["a"],"type":"{ message : String , action : Maybe.Maybe String , payload : a , timeout : Time.Time , fade : Time.Time }"},"Material.Tooltip.DOMState":{"args":[],"type":"{ rect : DOM.Rectangle, offsetWidth : Float, offsetHeight : Float }"},"Material.Menu.Model":{"args":[],"type":"{ ripples : Dict.Dict Int Material.Ripple.Model , animationState : Material.Menu.AnimationState , geometry : Maybe.Maybe Material.Menu.Geometry.Geometry , index : Maybe.Maybe Int }"},"PersonDetail.Person":{"args":[],"type":"{ id : Int, name : String, strengths : Maybe.Maybe String }"},"Material.Model":{"args":[],"type":"{ button : Parts.Indexed (List Int) Material.Button.Model , textfield : Parts.Indexed (List Int) Material.Textfield.Model , menu : Parts.Indexed (List Int) Material.Menu.Model , snackbar : Maybe.Maybe (Material.Snackbar.Model Int) , layout : Material.Layout.Model , toggles : Parts.Indexed (List Int) Material.Toggles.Model , tooltip : Parts.Indexed (List Int) Material.Tooltip.Model , tabs : Parts.Indexed (List Int) Material.Tabs.Model }"},"Material.Toggles.Model":{"args":[],"type":"{ ripple : Material.Ripple.Model, isFocused : Bool }"},"Parts.Indexed":{"args":["comparable","a"],"type":"Dict.Dict (Parts.Index comparable) a"},"Material.Textfield.Model":{"args":[],"type":"{ isFocused : Bool, value : String }"},"Material.Ripple.Model":{"args":[],"type":"{ animation : Material.Ripple.Animation , metrics : Maybe.Maybe Material.Ripple.Metrics , ignoringMouseDown : Bool }"},"Material.Tooltip.Model":{"args":[],"type":"{ isActive : Bool, domState : Material.Tooltip.DOMState }"},"Material.Msg":{"args":["obs"],"type":"Parts.Msg Material.Model obs"},"Parts.Index":{"args":["comparable"],"type":"comparable"},"Material.Button.Model":{"args":[],"type":"Material.Ripple.Model"},"Material.Menu.Geometry.Element":{"args":[],"type":"{ offsetTop : Float , offsetLeft : Float , offsetHeight : Float , bounds : DOM.Rectangle }"},"Material.Tabs.Model":{"args":[],"type":"{ ripples : Dict.Dict Int Material.Ripple.Model }"},"Material.Layout.Model":{"args":[],"type":"{ ripples : Dict.Dict Int Material.Ripple.Model , isSmallScreen : Bool , isCompact : Bool , isAnimating : Bool , isScrolled : Bool , isDrawerOpen : Bool , tabScrollState : Material.Layout.TabScrollState }"},"Material.Menu.Geometry.Geometry":{"args":[],"type":"{ button : Material.Menu.Geometry.Element , menu : Material.Menu.Geometry.Element , container : Material.Menu.Geometry.Element , offsetTops : List Float , offsetHeights : List Float }"},"Material.Ripple.Metrics":{"args":[],"type":"{ rect : DOM.Rectangle, x : Float, y : Float }"},"Time.Time":{"args":[],"type":"Float"},"Material.Snackbar.Model":{"args":["a"],"type":"{ queue : List (Material.Snackbar.Contents a) , state : Material.Snackbar.State a , seq : Int }"},"DOM.Rectangle":{"args":[],"type":"{ top : Float, left : Float, width : Float, height : Float }"}},"message":"Main.Msg"},"versions":{"elm":"0.18.0"}});
+    _dubert$strengths_friender$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"Material.Ripple.Animation":{"args":[],"tags":{"Inert":[],"Frame":["Int"]}},"Dict.LeafColor":{"args":[],"tags":{"LBBlack":[],"LBlack":[]}},"Material.Snackbar.Msg":{"args":["a"],"tags":{"Begin":["a"],"End":["a"],"Click":["a"],"Move":["Int","Material.Snackbar.Transition"]}},"Platform.Cmd.Cmd":{"args":["msg"],"tags":{"Cmd":[]}},"StrengthField.Msg":{"args":[],"tags":{"Input":["String"],"Mdl":["Material.Msg StrengthField.Msg"],"Validate":[]}},"PersonDetail.Msg":{"args":[],"tags":{"Mdl":["Material.Msg PersonDetail.Msg"],"StrengthFieldMsg":["Int","StrengthField.Msg"],"NameInput":["String"],"Delete":[],"Save":[]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":["Dict.LeafColor"]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Material.Snackbar.Transition":{"args":[],"tags":{"Clicked":[],"Timeout":[]}},"Material.Snackbar.State":{"args":["a"],"tags":{"Active":["Material.Snackbar.Contents a"],"Inert":[],"Fading":["Material.Snackbar.Contents a"]}},"Main.Msg":{"args":[],"tags":{"ToggleViewState":[],"FriendListMsg":["FriendList.Msg"],"Create":[],"Navigate":["Main.Page"],"PersonDetailMsg":["PersonDetail.Msg"],"ChangePage":["Main.Page"],"Snackbar":["Material.Snackbar.Msg Types.Person"],"Mdl":["Material.Msg Main.Msg"]}},"Dict.NColor":{"args":[],"tags":{"BBlack":[],"Red":[],"NBlack":[],"Black":[]}},"FriendList.Msg":{"args":[],"tags":{"Create":[],"Mdl":["Material.Msg FriendList.Msg"],"Select":["Types.Person"],"Undo":["Types.Person"],"Delete":["Types.Person"],"Save":["Types.Person"]}},"Parts.Msg":{"args":["c","obs"],"tags":{"Msg":["c -> ( Maybe.Maybe c, Platform.Cmd.Cmd obs )"]}},"Main.Page":{"args":[],"tags":{"NotFound":[],"FriendListPage":[],"PersonDetailPage":[]}},"Material.Menu.AnimationState":{"args":[],"tags":{"Idle":[],"Opened":[],"Closing":[],"Opening":[]}}},"aliases":{"Material.Layout.TabScrollState":{"args":[],"type":"{ canScrollLeft : Bool , canScrollRight : Bool , width : Maybe.Maybe Int }"},"Material.Snackbar.Contents":{"args":["a"],"type":"{ message : String , action : Maybe.Maybe String , payload : a , timeout : Time.Time , fade : Time.Time }"},"Material.Tooltip.DOMState":{"args":[],"type":"{ rect : DOM.Rectangle, offsetWidth : Float, offsetHeight : Float }"},"Material.Menu.Model":{"args":[],"type":"{ ripples : Dict.Dict Int Material.Ripple.Model , animationState : Material.Menu.AnimationState , geometry : Maybe.Maybe Material.Menu.Geometry.Geometry , index : Maybe.Maybe Int }"},"Material.Model":{"args":[],"type":"{ button : Parts.Indexed (List Int) Material.Button.Model , textfield : Parts.Indexed (List Int) Material.Textfield.Model , menu : Parts.Indexed (List Int) Material.Menu.Model , snackbar : Maybe.Maybe (Material.Snackbar.Model Int) , layout : Material.Layout.Model , toggles : Parts.Indexed (List Int) Material.Toggles.Model , tooltip : Parts.Indexed (List Int) Material.Tooltip.Model , tabs : Parts.Indexed (List Int) Material.Tabs.Model }"},"Material.Toggles.Model":{"args":[],"type":"{ ripple : Material.Ripple.Model, isFocused : Bool }"},"Parts.Indexed":{"args":["comparable","a"],"type":"Dict.Dict (Parts.Index comparable) a"},"Types.Person":{"args":[],"type":"{ id : Int, name : String, strengths : Maybe.Maybe String }"},"Material.Textfield.Model":{"args":[],"type":"{ isFocused : Bool, value : String }"},"Material.Ripple.Model":{"args":[],"type":"{ animation : Material.Ripple.Animation , metrics : Maybe.Maybe Material.Ripple.Metrics , ignoringMouseDown : Bool }"},"Material.Tooltip.Model":{"args":[],"type":"{ isActive : Bool, domState : Material.Tooltip.DOMState }"},"Material.Msg":{"args":["obs"],"type":"Parts.Msg Material.Model obs"},"Parts.Index":{"args":["comparable"],"type":"comparable"},"Material.Button.Model":{"args":[],"type":"Material.Ripple.Model"},"Material.Menu.Geometry.Element":{"args":[],"type":"{ offsetTop : Float , offsetLeft : Float , offsetHeight : Float , bounds : DOM.Rectangle }"},"Material.Tabs.Model":{"args":[],"type":"{ ripples : Dict.Dict Int Material.Ripple.Model }"},"Material.Layout.Model":{"args":[],"type":"{ ripples : Dict.Dict Int Material.Ripple.Model , isSmallScreen : Bool , isCompact : Bool , isAnimating : Bool , isScrolled : Bool , isDrawerOpen : Bool , tabScrollState : Material.Layout.TabScrollState }"},"Material.Menu.Geometry.Geometry":{"args":[],"type":"{ button : Material.Menu.Geometry.Element , menu : Material.Menu.Geometry.Element , container : Material.Menu.Geometry.Element , offsetTops : List Float , offsetHeights : List Float }"},"Material.Ripple.Metrics":{"args":[],"type":"{ rect : DOM.Rectangle, x : Float, y : Float }"},"Time.Time":{"args":[],"type":"Float"},"Material.Snackbar.Model":{"args":["a"],"type":"{ queue : List (Material.Snackbar.Contents a) , state : Material.Snackbar.State a , seq : Int }"},"DOM.Rectangle":{"args":[],"type":"{ top : Float, left : Float, width : Float, height : Float }"}},"message":"Main.Msg"},"versions":{"elm":"0.18.0"}});
 }
 
 if (typeof define === "function" && define['amd'])

@@ -13,7 +13,7 @@ import Material.List as Lists
 import Material.Button as Button
 import Material.Icon as Icon
 
-import PersonDetail exposing (Person)
+import Types exposing (Person, Flags, ViewState(..))
 import Strengths exposing (getStrengthNameListFromCodex)
 
 
@@ -27,17 +27,6 @@ type alias Model =
   , nextId : Int
   , viewState : ViewState
   , mdl : Material.Model
-  }
-
-
-type ViewState
-  = Expanded
-  | Collapsed
-
-
-type alias Flags =
-  { friendList : Maybe String
-  , viewState : Maybe String
   }
 
 
@@ -69,6 +58,7 @@ type Msg
   | Select Person
   | Save Person
   | Delete Person
+  | Undo Person
   | Mdl (Material.Msg Msg)
 
 
@@ -111,6 +101,18 @@ update msg model =
       let
         newFriends =
           List.filter (\f -> f.id /= person.id) model.friends
+      in
+        ( { model
+          | friends = newFriends
+          , selected = Nothing
+          }
+        , Cmd.none
+        )
+
+    Undo person ->
+      let
+        newFriends =
+          person :: model.friends
       in
         ( { model
           | friends = newFriends

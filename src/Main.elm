@@ -12,12 +12,15 @@ import Material
 import Material.Scheme
 import Material.Button as Button
 import Material.Icon as Icon
+import Material.Snackbar as Snackbar
 import Material.Options exposing (css)
+import Material.Helpers exposing (map1st, map2nd)
 import Material.Layout as Layout
 import Material.Menu as Menu
 
-import FriendList exposing (ViewState(..))
-import PersonDetail exposing (Person)
+import Types exposing (Person, Flags, ViewState(..))
+import FriendList
+import PersonDetail
 
 
 
@@ -34,12 +37,6 @@ main =
     }
 
 
-type alias Flags =
-  { friendList : Maybe String
-  , viewState : Maybe String
-  }
-
-
 
 {-- MODEL --}
 
@@ -49,8 +46,13 @@ type alias Model =
   , list : FriendList.Model
   , detail : PersonDetail.Model
   , viewState : ViewState
+  , snackbar : SnackbarModel
   , mdl : Material.Model
   }
+
+
+type alias SnackbarModel =
+  Snackbar.Model Person
 
 
 type Page
@@ -78,6 +80,7 @@ init flags location =
       , list = friendListModel
       , detail = personDetailModel
       , viewState = viewState
+      , snackbar = Snackbar.model
       , mdl = Material.model
       }
 
@@ -101,6 +104,7 @@ type Msg
   | ToggleViewState
   | PersonDetailMsg PersonDetail.Msg
   | FriendListMsg FriendList.Msg
+  | Snackbar (Snackbar.Msg Person)
   | Mdl (Material.Msg Msg)
 
 
@@ -138,6 +142,23 @@ update msg model =
     PersonDetailMsg personMsg ->
       messageFromPerson personMsg model
 
+    Snackbar (Snackbar.Click person) ->
+      let
+        ( newListModel, listCmd ) =
+          FriendList.update (FriendList.Undo person) model.list
+
+        saveCmd =
+          newListModel
+            |> encodeFriends
+            |> saveFriendList
+      in
+        ( { model | list = newListModel }, saveCmd )
+
+    Snackbar msg_ ->
+      Snackbar.update msg_ model.snackbar
+        |> map1st (\s -> { model | snackbar = s })
+        |> map2nd (Cmd.map Snackbar)
+
     Mdl msg_ ->
       Material.update msg_ model
 
@@ -160,13 +181,13 @@ create model =
 
 
 messageFromList : FriendList.Msg -> Model -> ( Model, Cmd Msg )
-messageFromList msg model =
+messageFromList msgFriendList model =
   let
     ( newListModel, cmd ) =
-      FriendList.update msg model.list
+      FriendList.update msgFriendList model.list
 
     newDetailModel =
-      updateDetailFromList msg model
+      updateDetailFromList msgFriendList model
   in
     ( { model
       | list = newListModel
@@ -177,8 +198,8 @@ messageFromList msg model =
 
 
 updateDetailFromList : FriendList.Msg -> Model -> PersonDetail.Model
-updateDetailFromList msg model =
-  case msg of
+updateDetailFromList msgFriendList model =
+  case msgFriendList of
     FriendList.Select person ->
       let
         ( newDetailModel, cmd ) =
@@ -191,29 +212,38 @@ updateDetailFromList msg model =
 
 
 messageFromPerson : PersonDetail.Msg -> Model -> ( Model, Cmd Msg )
-messageFromPerson msg model =
+messageFromPerson msgPersonDetail model =
   let
     ( newDetailModel, cmd ) =
-      PersonDetail.update msg model.detail
+      PersonDetail.update msgPersonDetail model.detail
 
     newListModel =
-      updateListFromPerson msg newDetailModel model
+      updateListFromPerson msgPersonDetail newDetailModel model
 
+    -- TOOD: I want to map the save command better instead of using an if/or
     saveCmd =
-      if msg == PersonDetail.Save then
-        newListModel
-          |> encodeFriends
-          |> saveFriendList
-      else
-        Cmd.none
+      if msgPersonDetail == PersonDetail.Save
+      || msgPersonDetail == PersonDetail.Delete
+        then
+          newListModel
+            |> encodeFriends
+            |> saveFriendList
+        else
+          Cmd.none
+
+    ( newSnackbarModel, snackbarCmd ) =
+      issueSnackbar msgPersonDetail newDetailModel.person model
+
   in
     ( { model
       | list = newListModel
       , detail = newDetailModel
+      , snackbar = newSnackbarModel
       }
     , Cmd.batch
       [ Cmd.map PersonDetailMsg cmd
       , saveCmd
+      , snackbarCmd
       ]
     )
 
@@ -237,6 +267,26 @@ updateListFromPerson msg detailModel model =
 
     _ ->
       model.list
+
+
+issueSnackbar : PersonDetail.Msg -> Person -> Model -> ( SnackbarModel, Cmd Msg )
+issueSnackbar msgPersonDetail person model =
+  if msgPersonDetail == PersonDetail.Delete then
+    let
+      text =
+        person.name ++ " successfully deleted"
+
+      toast =
+        Snackbar.snackbar person text "UNDO"
+
+      ( snackbarModel, snackbarCmd ) =
+        Snackbar.add toast model.snackbar
+          |> map2nd (Cmd.map Snackbar)
+
+    in
+      ( snackbarModel, snackbarCmd )
+  else
+    ( model.snackbar, Cmd.none )
 
 
 encodeFriends : FriendList.Model -> JE.Value
@@ -314,8 +364,7 @@ view model =
               ]
   in
     div [ class "mdl-layout--no-drawer-button" ]
-      [ Layout.render Mdl
-        model.mdl
+      [ Layout.render Mdl model.mdl
         [ Layout.fixedHeader ]
         { header = [ pageHeader model ]
         , drawer = []
@@ -323,6 +372,7 @@ view model =
         , main =
           [ page
           , addButton model
+          , Snackbar.view model.snackbar |> Html.map Snackbar
           ]
         }
       ]

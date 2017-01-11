@@ -12,6 +12,7 @@ import Material.Textfield as Textfield
 import Material.Options as Options
 import Material.Button as Button
 
+import Types exposing (Person)
 import StrengthField
 
 
@@ -23,13 +24,6 @@ type alias Model =
   { person : Person
   , strengthInputs : Dict Int StrengthField.Model
   , mdl : Material.Model
-  }
-
-
-type alias Person =
-  { id : Int
-  , name : String
-  , strengths : Maybe String
   }
 
 
@@ -152,7 +146,9 @@ validateAllFields model =
       in
         fieldModel
   in
-    Dict.map (\_ strength -> validateFieldModel strength) model.strengthInputs
+    Dict.map
+      (\_ strength -> validateFieldModel strength)
+      model.strengthInputs
 
 
 isAllFieldsValid : Dict Int StrengthField.Model -> Bool
@@ -237,10 +233,8 @@ injectStrength code =
 view : Model -> Html Msg
 view model =
   div [ style [ "padding" => "20px" ] ]
-    ([ div []
-      [ Textfield.render Mdl
-        [ 0 ]
-        model.mdl
+    ( [ div []
+      [ Textfield.render Mdl [0] model.mdl
         [ Textfield.label "Name"
         , Textfield.floatingLabel
         , Textfield.onInput NameInput
@@ -249,28 +243,31 @@ view model =
         , Options.css "width" "100%"
         ]
       ]
-     ]
-      ++ (model.strengthInputs |> Dict.toList |> List.map wrappedField)
-      ++ [ div [ style [ "display" => "flex", "justify-content" => "space-between" ] ]
-          [ Button.render Mdl
-            [ 0 ]
-            model.mdl
-            [ Button.raised
-            , Button.ripple
-            , Button.onClick Delete
-            ]
-            [ text "Delete" ]
-          , Button.render Mdl
-            [ 1 ]
-            model.mdl
-            [ Button.raised
-            , Button.colored
-            , Button.ripple
-            , Button.onClick Save
-            ]
-            [ text "Save" ]
+      ]
+    ++
+      (model.strengthInputs |> Dict.toList |> List.map wrappedField)
+    ++
+      [ div
+        [ style
+          [ "display" => "flex"
+          , "justify-content" => "space-between"
           ]
-         ]
+        ]
+        [ Button.render Mdl [0] model.mdl
+          [ Button.raised
+          , Button.ripple
+          , Button.onClick Delete
+          ]
+          [ text "Delete" ]
+        , Button.render Mdl [1] model.mdl
+          [ Button.raised
+          , Button.colored
+          , Button.ripple
+          , Button.onClick Save
+          ]
+          [ text "Save" ]
+        ]
+      ]
     )
 
 
@@ -286,23 +283,12 @@ wrappedField ( id, model ) =
 getOrdinalNumber : Int -> String
 getOrdinalNumber number =
   case number of
-    0 ->
-      "First"
-
-    1 ->
-      "Second"
-
-    2 ->
-      "Third"
-
-    3 ->
-      "Fourth"
-
-    4 ->
-      "Fifth"
-
-    _ ->
-      ""
+    0 ->"First"
+    1 ->"Second"
+    2 ->"Third"
+    3 ->"Fourth"
+    4 ->"Fifth"
+    _ ->""
 
 
 

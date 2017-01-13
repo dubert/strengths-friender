@@ -22,16 +22,22 @@
         padding-top: 20px;
       }
     }
-    /*.mdl-layout__content {
-      overflow: auto;
-      -webkit-overflow-scrolling: touch;
-    }*/
-    html,
-    body {
+    html, body {
       height: 100%;
       width: 100%;
       overflow: auto;
+    }
+    header {
+      position: fixed;
+    }
+    main {
+      overflow: auto;
       -webkit-overflow-scrolling: touch;
+    }
+    @media (max-width: 640px) {
+      main {
+        padding-top: 76px;
+      }
     }
   </style>
 </head>

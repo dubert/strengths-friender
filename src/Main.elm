@@ -427,7 +427,7 @@ addButton model =
     FriendListPage ->
       div
         [ style
-          [ "position" => "absolute"
+          [ "position" => "fixed"
           , "right" => "0px"
           , "bottom" => "24px"
           ]

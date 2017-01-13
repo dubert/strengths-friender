@@ -17795,7 +17795,7 @@ var _dubert$strengths_friender$Main$addButton = function (model) {
 				_0: _elm_lang$html$Html_Attributes$style(
 					{
 						ctor: '::',
-						_0: A2(_dubert$strengths_friender$Main_ops['=>'], 'position', 'absolute'),
+						_0: A2(_dubert$strengths_friender$Main_ops['=>'], 'position', 'fixed'),
 						_1: {
 							ctor: '::',
 							_0: A2(_dubert$strengths_friender$Main_ops['=>'], 'right', '0px'),

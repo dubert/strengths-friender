@@ -66,7 +66,8 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
     Create ->
-      create model
+      model
+        |> createNewPerson
 
     Select person ->
       ( { model
@@ -76,57 +77,23 @@ update msg model =
       )
 
     Save person ->
-      let
-        newFriends =
-          List.map
-            (\friend ->
-              if friend.id == person.id then
-                { friend
-                  | name = person.name
-                  , strengths = person.strengths
-                }
-              else
-                friend
-            )
-            model.friends
-      in
-        ( { model
-          | friends = newFriends
-          , selected = Nothing
-          }
-        , Cmd.none
-        )
+      model
+        |> save person
 
     Delete person ->
-      let
-        newFriends =
-          List.filter (\f -> f.id /= person.id) model.friends
-      in
-        ( { model
-          | friends = newFriends
-          , selected = Nothing
-          }
-        , Cmd.none
-        )
+      model
+        |> delete person
 
     Undo person ->
-      let
-        newFriends =
-          person :: model.friends
-      in
-        ( { model
-          | friends = newFriends
-          , selected = Nothing
-          }
-        , Cmd.none
-        )
+      model
+        |> undoDelete person
 
     Mdl msg_ ->
       Material.update msg_ model
 
 
-create : Model -> ( Model, Cmd Msg )
-create model =
+createNewPerson : Model -> ( Model, Cmd Msg )
+createNewPerson model =
   let
     newPerson =
       Person model.nextId "" Nothing
@@ -143,6 +110,58 @@ create model =
       , nextId = newId
       }
     , Navigation.newUrl "#add"
+    )
+
+
+save : Person -> Model -> ( Model, Cmd Msg )
+save person model =
+  let
+    newFriends =
+      List.map
+        (\friend ->
+          if friend.id == person.id then
+            { friend
+              | name = person.name
+              , strengths = person.strengths
+            }
+          else
+            friend
+        )
+        model.friends
+  in
+    ( { model
+      | friends = newFriends
+      , selected = Nothing
+      }
+    , Cmd.none
+    )
+
+
+delete : Person -> Model -> ( Model, Cmd Msg )
+delete person model =
+  let
+    newFriends =
+      List.filter (\f -> f.id /= person.id) model.friends
+  in
+    ( { model
+      | friends = newFriends
+      , selected = Nothing
+      }
+    , Cmd.none
+    )
+
+
+undoDelete : Person -> Model -> ( Model, Cmd Msg )
+undoDelete person model =
+  let
+    newFriends =
+      person :: model.friends
+  in
+    ( { model
+      | friends = newFriends
+      , selected = Nothing
+      }
+    , Cmd.none
     )
 
 

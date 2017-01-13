@@ -77,7 +77,8 @@ update msg model =
       )
 
     Validate ->
-      publishError model
+      model
+        |> publishError
 
     Mdl msg_ ->
       Material.update msg_ model

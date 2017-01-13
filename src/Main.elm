@@ -120,39 +120,24 @@ update msg model =
       ( { model | page = page }, Cmd.none )
 
     Create ->
-      create model
+      model
+        |> createNewPerson
 
     ToggleViewState ->
-      let
-        newViewState =
-          case model.viewState of
-            Collapsed -> Expanded
-            Expanded -> Collapsed
-
-        saveCmd =
-          newViewState
-            |> encodeViewState
-            |> saveViewState
-      in
-        ( { model | viewState = newViewState }, saveCmd )
+      model
+        |> setViewState
 
     FriendListMsg listMsg ->
-      messageFromList listMsg model
+      model
+        |> handleListMsg listMsg
 
-    PersonDetailMsg personMsg ->
-      messageFromPerson personMsg model
+    PersonDetailMsg detailMsg ->
+      model
+        |> handleDetailMsg detailMsg
 
     Snackbar (Snackbar.Click person) ->
-      let
-        ( newListModel, listCmd ) =
-          FriendList.update (FriendList.Undo person) model.list
-
-        saveCmd =
-          newListModel
-            |> encodeFriends
-            |> saveFriendList
-      in
-        ( { model | list = newListModel }, saveCmd )
+      model
+        |> undoDelete person
 
     Snackbar msg_ ->
       Snackbar.update msg_ model.snackbar
@@ -163,8 +148,8 @@ update msg model =
       Material.update msg_ model
 
 
-create : Model -> ( Model, Cmd Msg )
-create model =
+createNewPerson : Model -> ( Model, Cmd Msg )
+createNewPerson model =
   let
     ( newListModel, listCmd ) =
       FriendList.update FriendList.Create model.list
@@ -180,8 +165,24 @@ create model =
     )
 
 
-messageFromList : FriendList.Msg -> Model -> ( Model, Cmd Msg )
-messageFromList msgFriendList model =
+setViewState : Model -> ( Model, Cmd Msg )
+setViewState model =
+  let
+    newViewState =
+      case model.viewState of
+        Collapsed -> Expanded
+        Expanded -> Collapsed
+
+    saveCmd =
+      newViewState
+        |> encodeViewState
+        |> saveViewState
+  in
+    ( { model | viewState = newViewState }, saveCmd )
+
+
+handleListMsg : FriendList.Msg -> Model -> ( Model, Cmd Msg )
+handleListMsg msgFriendList model =
   let
     ( newListModel, cmd ) =
       FriendList.update msgFriendList model.list
@@ -211,8 +212,8 @@ updateDetailFromList msgFriendList model =
       model.detail
 
 
-messageFromPerson : PersonDetail.Msg -> Model -> ( Model, Cmd Msg )
-messageFromPerson msgPersonDetail model =
+handleDetailMsg : PersonDetail.Msg -> Model -> ( Model, Cmd Msg )
+handleDetailMsg msgPersonDetail model =
   let
     ( newDetailModel, cmd ) =
       PersonDetail.update msgPersonDetail model.detail
@@ -249,8 +250,8 @@ messageFromPerson msgPersonDetail model =
 
 
 updateListFromPerson : PersonDetail.Msg -> PersonDetail.Model -> Model -> FriendList.Model
-updateListFromPerson msg detailModel model =
-  case msg of
+updateListFromPerson msgPersonDetail detailModel model =
+  case msgPersonDetail of
     PersonDetail.Save ->
       let
         ( newListModel, cmd ) =
@@ -287,6 +288,20 @@ issueSnackbar msgPersonDetail person model =
       ( snackbarModel, snackbarCmd )
   else
     ( model.snackbar, Cmd.none )
+
+
+undoDelete : Person -> Model -> ( Model, Cmd Msg )
+undoDelete person model =
+  let
+    ( newListModel, listCmd ) =
+      FriendList.update (FriendList.Undo person) model.list
+
+    saveCmd =
+      newListModel
+        |> encodeFriends
+        |> saveFriendList
+  in
+    ( { model | list = newListModel }, saveCmd )
 
 
 encodeFriends : FriendList.Model -> JE.Value

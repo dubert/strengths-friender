@@ -22,12 +22,24 @@
         padding-top: 20px;
       }
     }
+    /*.mdl-layout__content {
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }*/
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
   </style>
 </head>
 
 <body>
   <div id="app"></div>
 
+  <script src="inobounce.min.js"></script>
   <script src="bundle.js"></script>
   <script>
 

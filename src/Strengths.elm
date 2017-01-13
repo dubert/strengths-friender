@@ -435,19 +435,14 @@ getStrengthFromCode code =
 getStrengthNameFromCode : Char -> String
 getStrengthNameFromCode code =
   case Dict.get code strengthDict of
-    Nothing ->
-      ""
-
-    Just strength ->
-      strength.name
+    Nothing -> ""
+    Just strength -> strength.name
 
 
 getStrengthNameListFromCodex : Maybe String -> List String
 getStrengthNameListFromCodex maybeCodex =
   case maybeCodex of
-    Nothing ->
-      []
-
+    Nothing -> []
     Just codex ->
       codex
         |> String.toList

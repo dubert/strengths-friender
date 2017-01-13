@@ -22,9 +22,12 @@ import StrengthField
 
 type alias Model =
   { person : Person
-  , strengthInputs : Dict Int StrengthField.Model
+  , strengthInputs : Dict InputId StrengthField.Model
   , mdl : Material.Model
   }
+
+
+type alias InputId = Int
 
 
 init : Int -> ( Model, Cmd Msg )
@@ -69,7 +72,7 @@ initWith person =
 
 type Msg
   = NameInput String
-  | StrengthFieldMsg Int StrengthField.Msg
+  | StrengthFieldMsg InputId StrengthField.Msg
   | Delete
   | Save
   | Mdl (Material.Msg Msg)
@@ -79,35 +82,48 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
     NameInput name ->
-      let
-        person = model.person
-        newPerson = { person | name = name }
-      in
-        ( { model | person = newPerson }, Cmd.none )
+      model
+        |> setNameInput name
 
-    StrengthFieldMsg index childMsg ->
-      case Dict.get index model.strengthInputs of
-        Nothing ->
-          ( model, Cmd.none )
-
-        Just strength ->
-          let
-            ( newFieldModel, cmd ) =
-              StrengthField.update childMsg strength
-
-            newStrengths =
-              Dict.insert index newFieldModel model.strengthInputs
-          in
-            ( { model | strengthInputs = newStrengths }, Cmd.none )
+    StrengthFieldMsg index inputMsg ->
+      model
+        |> handleInputMsg index inputMsg
 
     Delete ->
       ( model, Navigation.newUrl "/" )
 
     Save ->
-      save model
+      model
+        |> save
 
     Mdl msg_ ->
       Material.update msg_ model
+
+
+setNameInput : String -> Model -> ( Model, Cmd Msg )
+setNameInput name model =
+  let
+    person = model.person
+    newPerson = { person | name = name }
+  in
+    ( { model | person = newPerson }, Cmd.none )
+
+
+handleInputMsg : InputId -> StrengthField.Msg -> Model -> ( Model, Cmd Msg )
+handleInputMsg inputId msgStrengthField model =
+  case Dict.get inputId model.strengthInputs of
+    Nothing ->
+      ( model, Cmd.none )
+
+    Just strength ->
+      let
+        ( newFieldModel, cmd ) =
+          StrengthField.update msgStrengthField strength
+
+        newStrengths =
+          Dict.insert inputId newFieldModel model.strengthInputs
+      in
+        ( { model | strengthInputs = newStrengths }, Cmd.none )
 
 
 save : Model -> ( Model, Cmd Msg )

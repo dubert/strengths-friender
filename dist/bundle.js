@@ -16540,7 +16540,52 @@ var _dubert$strengths_friender$FriendList$decodeFriends = function (json) {
 	}();
 	return A2(_elm_lang$core$List$map, _dubert$strengths_friender$FriendList$insertId, indexedList);
 };
-var _dubert$strengths_friender$FriendList$create = function (model) {
+var _dubert$strengths_friender$FriendList$undoDelete = F2(
+	function (person, model) {
+		var newFriends = {ctor: '::', _0: person, _1: model.friends};
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Native_Utils.update(
+				model,
+				{friends: newFriends, selected: _elm_lang$core$Maybe$Nothing}),
+			_1: _elm_lang$core$Platform_Cmd$none
+		};
+	});
+var _dubert$strengths_friender$FriendList$delete = F2(
+	function (person, model) {
+		var newFriends = A2(
+			_elm_lang$core$List$filter,
+			function (f) {
+				return !_elm_lang$core$Native_Utils.eq(f.id, person.id);
+			},
+			model.friends);
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Native_Utils.update(
+				model,
+				{friends: newFriends, selected: _elm_lang$core$Maybe$Nothing}),
+			_1: _elm_lang$core$Platform_Cmd$none
+		};
+	});
+var _dubert$strengths_friender$FriendList$save = F2(
+	function (person, model) {
+		var newFriends = A2(
+			_elm_lang$core$List$map,
+			function (friend) {
+				return _elm_lang$core$Native_Utils.eq(friend.id, person.id) ? _elm_lang$core$Native_Utils.update(
+					friend,
+					{name: person.name, strengths: person.strengths}) : friend;
+			},
+			model.friends);
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Native_Utils.update(
+				model,
+				{friends: newFriends, selected: _elm_lang$core$Maybe$Nothing}),
+			_1: _elm_lang$core$Platform_Cmd$none
+		};
+	});
+var _dubert$strengths_friender$FriendList$createNewPerson = function (model) {
 	var newId = model.nextId + 1;
 	var newPerson = A3(_dubert$strengths_friender$Types$Person, model.nextId, '', _elm_lang$core$Maybe$Nothing);
 	var newFriends = {ctor: '::', _0: newPerson, _1: model.friends};
@@ -16561,7 +16606,7 @@ var _dubert$strengths_friender$FriendList$update = F2(
 		var _p3 = msg;
 		switch (_p3.ctor) {
 			case 'Create':
-				return _dubert$strengths_friender$FriendList$create(model);
+				return _dubert$strengths_friender$FriendList$createNewPerson(model);
 			case 'Select':
 				return {
 					ctor: '_Tuple2',
@@ -16573,56 +16618,22 @@ var _dubert$strengths_friender$FriendList$update = F2(
 					_1: _elm_lang$navigation$Navigation$newUrl('#add')
 				};
 			case 'Save':
-				var _p4 = _p3._0;
-				var newFriends = A2(
-					_elm_lang$core$List$map,
-					function (friend) {
-						return _elm_lang$core$Native_Utils.eq(friend.id, _p4.id) ? _elm_lang$core$Native_Utils.update(
-							friend,
-							{name: _p4.name, strengths: _p4.strengths}) : friend;
-					},
-					model.friends);
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{friends: newFriends, selected: _elm_lang$core$Maybe$Nothing}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
+				return A2(_dubert$strengths_friender$FriendList$save, _p3._0, model);
 			case 'Delete':
-				var newFriends = A2(
-					_elm_lang$core$List$filter,
-					function (f) {
-						return !_elm_lang$core$Native_Utils.eq(f.id, _p3._0.id);
-					},
-					model.friends);
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{friends: newFriends, selected: _elm_lang$core$Maybe$Nothing}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
+				return A2(_dubert$strengths_friender$FriendList$delete, _p3._0, model);
 			case 'Undo':
-				var newFriends = {ctor: '::', _0: _p3._0, _1: model.friends};
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{friends: newFriends, selected: _elm_lang$core$Maybe$Nothing}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
+				return A2(_dubert$strengths_friender$FriendList$undoDelete, _p3._0, model);
 			default:
 				return A2(_MichaelCombs28$elm_mdl$Material$update, _p3._0, model);
 		}
 	});
 var _dubert$strengths_friender$FriendList$init = function (flags) {
 	var initFriends = function () {
-		var _p5 = flags.friendList;
-		if (_p5.ctor === 'Nothing') {
+		var _p4 = flags.friendList;
+		if (_p4.ctor === 'Nothing') {
 			return {ctor: '[]'};
 		} else {
-			return _dubert$strengths_friender$FriendList$decodeFriends(_p5._0);
+			return _dubert$strengths_friender$FriendList$decodeFriends(_p4._0);
 		}
 	}();
 	var initModel = {
@@ -16655,8 +16666,8 @@ var _dubert$strengths_friender$FriendList$Select = function (a) {
 };
 var _dubert$strengths_friender$FriendList$personView = F3(
 	function (viewState, model, person) {
-		var _p6 = viewState;
-		if (_p6.ctor === 'Collapsed') {
+		var _p5 = viewState;
+		if (_p5.ctor === 'Collapsed') {
 			return A2(
 				_MichaelCombs28$elm_mdl$Material_List$li,
 				{ctor: '[]'},
@@ -17047,40 +17058,47 @@ var _dubert$strengths_friender$PersonDetail$save = function (model) {
 		_1: cmds
 	};
 };
+var _dubert$strengths_friender$PersonDetail$handleInputMsg = F3(
+	function (inputId, msgStrengthField, model) {
+		var _p8 = A2(_elm_lang$core$Dict$get, inputId, model.strengthInputs);
+		if (_p8.ctor === 'Nothing') {
+			return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+		} else {
+			var _p9 = A2(_dubert$strengths_friender$StrengthField$update, msgStrengthField, _p8._0);
+			var newFieldModel = _p9._0;
+			var cmd = _p9._1;
+			var newStrengths = A3(_elm_lang$core$Dict$insert, inputId, newFieldModel, model.strengthInputs);
+			return {
+				ctor: '_Tuple2',
+				_0: _elm_lang$core$Native_Utils.update(
+					model,
+					{strengthInputs: newStrengths}),
+				_1: _elm_lang$core$Platform_Cmd$none
+			};
+		}
+	});
+var _dubert$strengths_friender$PersonDetail$setNameInput = F2(
+	function (name, model) {
+		var person = model.person;
+		var newPerson = _elm_lang$core$Native_Utils.update(
+			person,
+			{name: name});
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Native_Utils.update(
+				model,
+				{person: newPerson}),
+			_1: _elm_lang$core$Platform_Cmd$none
+		};
+	});
 var _dubert$strengths_friender$PersonDetail$update = F2(
 	function (msg, model) {
-		var _p8 = msg;
-		switch (_p8.ctor) {
+		var _p10 = msg;
+		switch (_p10.ctor) {
 			case 'NameInput':
-				var person = model.person;
-				var newPerson = _elm_lang$core$Native_Utils.update(
-					person,
-					{name: _p8._0});
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{person: newPerson}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
+				return A2(_dubert$strengths_friender$PersonDetail$setNameInput, _p10._0, model);
 			case 'StrengthFieldMsg':
-				var _p11 = _p8._0;
-				var _p9 = A2(_elm_lang$core$Dict$get, _p11, model.strengthInputs);
-				if (_p9.ctor === 'Nothing') {
-					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-				} else {
-					var _p10 = A2(_dubert$strengths_friender$StrengthField$update, _p8._1, _p9._0);
-					var newFieldModel = _p10._0;
-					var cmd = _p10._1;
-					var newStrengths = A3(_elm_lang$core$Dict$insert, _p11, newFieldModel, model.strengthInputs);
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{strengthInputs: newStrengths}),
-						_1: _elm_lang$core$Platform_Cmd$none
-					};
-				}
+				return A3(_dubert$strengths_friender$PersonDetail$handleInputMsg, _p10._0, _p10._1, model);
 			case 'Delete':
 				return {
 					ctor: '_Tuple2',
@@ -17090,7 +17108,7 @@ var _dubert$strengths_friender$PersonDetail$update = F2(
 			case 'Save':
 				return _dubert$strengths_friender$PersonDetail$save(model);
 			default:
-				return A2(_MichaelCombs28$elm_mdl$Material$update, _p8._0, model);
+				return A2(_MichaelCombs28$elm_mdl$Material$update, _p10._0, model);
 		}
 	});
 var _dubert$strengths_friender$PersonDetail$initWith = function (person) {
@@ -17108,9 +17126,9 @@ var _dubert$strengths_friender$PersonDetail$initPerson = function (currentId) {
 	return {id: currentId, name: '', strengths: _elm_lang$core$Maybe$Nothing};
 };
 var _dubert$strengths_friender$PersonDetail$init = function (currentId) {
-	var _p12 = _dubert$strengths_friender$StrengthField$init;
-	var fieldModel = _p12._0;
-	var cmd = _p12._1;
+	var _p11 = _dubert$strengths_friender$StrengthField$init;
+	var fieldModel = _p11._0;
+	var cmd = _p11._1;
 	var initInputs = _elm_lang$core$Dict$fromList(
 		A2(
 			_elm_lang$core$List$indexedMap,
@@ -17142,14 +17160,14 @@ var _dubert$strengths_friender$PersonDetail$StrengthFieldMsg = F2(
 	function (a, b) {
 		return {ctor: 'StrengthFieldMsg', _0: a, _1: b};
 	});
-var _dubert$strengths_friender$PersonDetail$wrappedField = function (_p13) {
-	var _p14 = _p13;
-	var _p15 = _p14._0;
-	var ordinal = _dubert$strengths_friender$PersonDetail$getOrdinalNumber(_p15);
+var _dubert$strengths_friender$PersonDetail$wrappedField = function (_p12) {
+	var _p13 = _p12;
+	var _p14 = _p13._0;
+	var ordinal = _dubert$strengths_friender$PersonDetail$getOrdinalNumber(_p14);
 	return A2(
 		_elm_lang$html$Html$map,
-		_dubert$strengths_friender$PersonDetail$StrengthFieldMsg(_p15),
-		A2(_dubert$strengths_friender$StrengthField$view, _p14._1, ordinal));
+		_dubert$strengths_friender$PersonDetail$StrengthFieldMsg(_p14),
+		A2(_dubert$strengths_friender$StrengthField$view, _p13._1, ordinal));
 };
 var _dubert$strengths_friender$PersonDetail$NameInput = function (a) {
 	return {ctor: 'NameInput', _0: a};
@@ -17377,8 +17395,8 @@ var _dubert$strengths_friender$Main$encodeFriends = function (model) {
 		A2(_elm_lang$core$List$map, _dubert$strengths_friender$Main$encodeFriend, model.friends));
 };
 var _dubert$strengths_friender$Main$updateListFromPerson = F3(
-	function (msg, detailModel, model) {
-		var _p4 = msg;
+	function (msgPersonDetail, detailModel, model) {
+		var _p4 = msgPersonDetail;
 		switch (_p4.ctor) {
 			case 'Save':
 				var _p5 = A2(
@@ -17412,7 +17430,7 @@ var _dubert$strengths_friender$Main$updateDetailFromList = F2(
 			return model.detail;
 		}
 	});
-var _dubert$strengths_friender$Main$create = function (model) {
+var _dubert$strengths_friender$Main$createNewPerson = function (model) {
 	var _p9 = _dubert$strengths_friender$PersonDetail$init(model.list.nextId);
 	var newDetailModel = _p9._0;
 	var detailCmd = _p9._1;
@@ -17432,11 +17450,48 @@ var _dubert$strengths_friender$Main$saveFriendList = _elm_lang$core$Native_Platf
 	function (v) {
 		return v;
 	});
+var _dubert$strengths_friender$Main$undoDelete = F2(
+	function (person, model) {
+		var _p11 = A2(
+			_dubert$strengths_friender$FriendList$update,
+			_dubert$strengths_friender$FriendList$Undo(person),
+			model.list);
+		var newListModel = _p11._0;
+		var listCmd = _p11._1;
+		var saveCmd = _dubert$strengths_friender$Main$saveFriendList(
+			_dubert$strengths_friender$Main$encodeFriends(newListModel));
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Native_Utils.update(
+				model,
+				{list: newListModel}),
+			_1: saveCmd
+		};
+	});
 var _dubert$strengths_friender$Main$saveViewState = _elm_lang$core$Native_Platform.outgoingPort(
 	'saveViewState',
 	function (v) {
 		return v;
 	});
+var _dubert$strengths_friender$Main$setViewState = function (model) {
+	var newViewState = function () {
+		var _p12 = model.viewState;
+		if (_p12.ctor === 'Collapsed') {
+			return _dubert$strengths_friender$Types$Expanded;
+		} else {
+			return _dubert$strengths_friender$Types$Collapsed;
+		}
+	}();
+	var saveCmd = _dubert$strengths_friender$Main$saveViewState(
+		_dubert$strengths_friender$Main$encodeViewState(newViewState));
+	return {
+		ctor: '_Tuple2',
+		_0: _elm_lang$core$Native_Utils.update(
+			model,
+			{viewState: newViewState}),
+		_1: saveCmd
+	};
+};
 var _dubert$strengths_friender$Main$Model = F6(
 	function (a, b, c, d, e, f) {
 		return {page: a, list: b, detail: c, viewState: d, snackbar: e, mdl: f};
@@ -17445,8 +17500,8 @@ var _dubert$strengths_friender$Main$PersonDetailPage = {ctor: 'PersonDetailPage'
 var _dubert$strengths_friender$Main$FriendListPage = {ctor: 'FriendListPage'};
 var _dubert$strengths_friender$Main$NotFound = {ctor: 'NotFound'};
 var _dubert$strengths_friender$Main$hashToPage = function (hash) {
-	var _p11 = hash;
-	switch (_p11) {
+	var _p13 = hash;
+	switch (_p13) {
 		case '':
 			return _dubert$strengths_friender$Main$FriendListPage;
 		case '#add':
@@ -17466,12 +17521,12 @@ var _dubert$strengths_friender$Main$issueSnackbar = F3(
 		if (_elm_lang$core$Native_Utils.eq(msgPersonDetail, _dubert$strengths_friender$PersonDetail$Delete)) {
 			var text = A2(_elm_lang$core$Basics_ops['++'], person.name, ' successfully deleted');
 			var toast = A3(_MichaelCombs28$elm_mdl$Material_Snackbar$snackbar, person, text, 'UNDO');
-			var _p12 = A2(
+			var _p14 = A2(
 				_MichaelCombs28$elm_mdl$Material_Helpers$map2nd,
 				_elm_lang$core$Platform_Cmd$map(_dubert$strengths_friender$Main$Snackbar),
 				A2(_MichaelCombs28$elm_mdl$Material_Snackbar$add, toast, model.snackbar));
-			var snackbarModel = _p12._0;
-			var snackbarCmd = _p12._1;
+			var snackbarModel = _p14._0;
+			var snackbarCmd = _p14._1;
 			return {ctor: '_Tuple2', _0: snackbarModel, _1: snackbarCmd};
 		} else {
 			return {ctor: '_Tuple2', _0: model.snackbar, _1: _elm_lang$core$Platform_Cmd$none};
@@ -17480,12 +17535,12 @@ var _dubert$strengths_friender$Main$issueSnackbar = F3(
 var _dubert$strengths_friender$Main$FriendListMsg = function (a) {
 	return {ctor: 'FriendListMsg', _0: a};
 };
-var _dubert$strengths_friender$Main$messageFromList = F2(
+var _dubert$strengths_friender$Main$handleListMsg = F2(
 	function (msgFriendList, model) {
 		var newDetailModel = A2(_dubert$strengths_friender$Main$updateDetailFromList, msgFriendList, model);
-		var _p13 = A2(_dubert$strengths_friender$FriendList$update, msgFriendList, model.list);
-		var newListModel = _p13._0;
-		var cmd = _p13._1;
+		var _p15 = A2(_dubert$strengths_friender$FriendList$update, msgFriendList, model.list);
+		var newListModel = _p15._0;
+		var cmd = _p15._1;
 		return {
 			ctor: '_Tuple2',
 			_0: _elm_lang$core$Native_Utils.update(
@@ -17500,19 +17555,19 @@ var _dubert$strengths_friender$Main$PersonDetailMsg = function (a) {
 var _dubert$strengths_friender$Main$init = F2(
 	function (flags, location) {
 		var viewState = function () {
-			var _p14 = flags.viewState;
-			if (_p14.ctor === 'Nothing') {
+			var _p16 = flags.viewState;
+			if (_p16.ctor === 'Nothing') {
 				return _dubert$strengths_friender$Types$Expanded;
 			} else {
-				return _dubert$strengths_friender$Main$decodeViewState(_p14._0);
+				return _dubert$strengths_friender$Main$decodeViewState(_p16._0);
 			}
 		}();
-		var _p15 = _dubert$strengths_friender$PersonDetail$init(0);
-		var personDetailModel = _p15._0;
-		var personDetailCmd = _p15._1;
-		var _p16 = _dubert$strengths_friender$FriendList$init(flags);
-		var friendListModel = _p16._0;
-		var friendListCmd = _p16._1;
+		var _p17 = _dubert$strengths_friender$PersonDetail$init(0);
+		var personDetailModel = _p17._0;
+		var personDetailCmd = _p17._1;
+		var _p18 = _dubert$strengths_friender$FriendList$init(flags);
+		var friendListModel = _p18._0;
+		var friendListCmd = _p18._1;
 		var initModel = {
 			page: _dubert$strengths_friender$Main$hashToPage(location.hash),
 			list: friendListModel,
@@ -17536,17 +17591,17 @@ var _dubert$strengths_friender$Main$init = F2(
 				})
 		};
 	});
-var _dubert$strengths_friender$Main$messageFromPerson = F2(
+var _dubert$strengths_friender$Main$handleDetailMsg = F2(
 	function (msgPersonDetail, model) {
-		var _p17 = A2(_dubert$strengths_friender$PersonDetail$update, msgPersonDetail, model.detail);
-		var newDetailModel = _p17._0;
-		var cmd = _p17._1;
+		var _p19 = A2(_dubert$strengths_friender$PersonDetail$update, msgPersonDetail, model.detail);
+		var newDetailModel = _p19._0;
+		var cmd = _p19._1;
 		var newListModel = A3(_dubert$strengths_friender$Main$updateListFromPerson, msgPersonDetail, newDetailModel, model);
 		var saveCmd = (_elm_lang$core$Native_Utils.eq(msgPersonDetail, _dubert$strengths_friender$PersonDetail$Save) || _elm_lang$core$Native_Utils.eq(msgPersonDetail, _dubert$strengths_friender$PersonDetail$Delete)) ? _dubert$strengths_friender$Main$saveFriendList(
 			_dubert$strengths_friender$Main$encodeFriends(newListModel)) : _elm_lang$core$Platform_Cmd$none;
-		var _p18 = A3(_dubert$strengths_friender$Main$issueSnackbar, msgPersonDetail, newDetailModel.person, model);
-		var newSnackbarModel = _p18._0;
-		var snackbarCmd = _p18._1;
+		var _p20 = A3(_dubert$strengths_friender$Main$issueSnackbar, msgPersonDetail, newDetailModel.person, model);
+		var newSnackbarModel = _p20._0;
+		var snackbarCmd = _p20._1;
 		return {
 			ctor: '_Tuple2',
 			_0: _elm_lang$core$Native_Utils.update(
@@ -17570,64 +17625,34 @@ var _dubert$strengths_friender$Main$messageFromPerson = F2(
 	});
 var _dubert$strengths_friender$Main$update = F2(
 	function (msg, model) {
-		var _p19 = msg;
-		switch (_p19.ctor) {
+		var _p21 = msg;
+		switch (_p21.ctor) {
 			case 'Navigate':
 				return {
 					ctor: '_Tuple2',
 					_0: model,
 					_1: _elm_lang$navigation$Navigation$newUrl(
-						_dubert$strengths_friender$Main$pageToHash(_p19._0))
+						_dubert$strengths_friender$Main$pageToHash(_p21._0))
 				};
 			case 'ChangePage':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{page: _p19._0}),
+						{page: _p21._0}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'Create':
-				return _dubert$strengths_friender$Main$create(model);
+				return _dubert$strengths_friender$Main$createNewPerson(model);
 			case 'ToggleViewState':
-				var newViewState = function () {
-					var _p20 = model.viewState;
-					if (_p20.ctor === 'Collapsed') {
-						return _dubert$strengths_friender$Types$Expanded;
-					} else {
-						return _dubert$strengths_friender$Types$Collapsed;
-					}
-				}();
-				var saveCmd = _dubert$strengths_friender$Main$saveViewState(
-					_dubert$strengths_friender$Main$encodeViewState(newViewState));
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{viewState: newViewState}),
-					_1: saveCmd
-				};
+				return _dubert$strengths_friender$Main$setViewState(model);
 			case 'FriendListMsg':
-				return A2(_dubert$strengths_friender$Main$messageFromList, _p19._0, model);
+				return A2(_dubert$strengths_friender$Main$handleListMsg, _p21._0, model);
 			case 'PersonDetailMsg':
-				return A2(_dubert$strengths_friender$Main$messageFromPerson, _p19._0, model);
+				return A2(_dubert$strengths_friender$Main$handleDetailMsg, _p21._0, model);
 			case 'Snackbar':
-				if (_p19._0.ctor === 'Click') {
-					var _p21 = A2(
-						_dubert$strengths_friender$FriendList$update,
-						_dubert$strengths_friender$FriendList$Undo(_p19._0._0),
-						model.list);
-					var newListModel = _p21._0;
-					var listCmd = _p21._1;
-					var saveCmd = _dubert$strengths_friender$Main$saveFriendList(
-						_dubert$strengths_friender$Main$encodeFriends(newListModel));
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Native_Utils.update(
-							model,
-							{list: newListModel}),
-						_1: saveCmd
-					};
+				if (_p21._0.ctor === 'Click') {
+					return A2(_dubert$strengths_friender$Main$undoDelete, _p21._0._0, model);
 				} else {
 					return A2(
 						_MichaelCombs28$elm_mdl$Material_Helpers$map2nd,
@@ -17639,10 +17664,10 @@ var _dubert$strengths_friender$Main$update = F2(
 									model,
 									{snackbar: s});
 							},
-							A2(_MichaelCombs28$elm_mdl$Material_Snackbar$update, _p19._0, model.snackbar)));
+							A2(_MichaelCombs28$elm_mdl$Material_Snackbar$update, _p21._0, model.snackbar)));
 				}
 			default:
-				return A2(_MichaelCombs28$elm_mdl$Material$update, _p19._0, model);
+				return A2(_MichaelCombs28$elm_mdl$Material$update, _p21._0, model);
 		}
 	});
 var _dubert$strengths_friender$Main$subscriptions = function (model) {

@@ -13,7 +13,7 @@ import Material.Scheme
 import Material.Button as Button
 import Material.Icon as Icon
 import Material.Snackbar as Snackbar
-import Material.Options exposing (css)
+import Material.Options as Options
 import Material.Helpers exposing (map1st, map2nd)
 import Material.Layout as Layout
 import Material.Menu as Menu
@@ -145,7 +145,7 @@ update msg model =
         |> map2nd (Cmd.map Snackbar)
 
     Mdl msg_ ->
-      Material.update msg_ model
+      Material.update Mdl msg_ model
 
 
 createNewPerson : Model -> ( Model, Cmd Msg )
@@ -436,8 +436,8 @@ addButton model =
           [ Button.fab
           , Button.colored
           , Button.ripple
-          , Button.onClick Create
-          , css "margin" "0 24px"
+          , Options.onClick Create
+          , Options.css "margin" "0 24px"
           ]
           [ Icon.i "add" ]
         ]

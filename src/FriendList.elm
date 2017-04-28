@@ -12,6 +12,7 @@ import Material
 import Material.List as Lists
 import Material.Button as Button
 import Material.Icon as Icon
+import Material.Options as Options
 
 import Types exposing (Person, Flags, ViewState(..))
 import Strengths exposing (getStrengthNameListFromCodex)
@@ -89,7 +90,7 @@ update msg model =
         |> undoDelete person
 
     Mdl msg_ ->
-      Material.update msg_ model
+      Material.update Mdl msg_ model
 
 
 createNewPerson : Model -> ( Model, Cmd Msg )
@@ -226,11 +227,9 @@ personView viewState model person =
     Collapsed ->
       Lists.li []
         [ Lists.content [] [ text person.name ]
-        , Button.render Mdl
-          [ person.id ]
-          model.mdl
+        , Button.render Mdl [ person.id ] model.mdl
           [ Button.icon
-          , Button.onClick (Select person)
+          , Options.onClick (Select person)
           ]
           [ Icon.i "create" ]
         ]
@@ -241,9 +240,9 @@ personView viewState model person =
           [ text person.name
           , strengthsInfo person
           ]
-        , Button.render Mdl [person.id] model.mdl
+        , Button.render Mdl [ person.id ] model.mdl
           [ Button.icon
-          , Button.onClick (Select person)
+          , Options.onClick (Select person)
           ]
           [ Icon.i "create" ]
         ]

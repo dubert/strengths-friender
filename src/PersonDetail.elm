@@ -97,16 +97,16 @@ update msg model =
         |> save
 
     Mdl msg_ ->
-      Material.update msg_ model
+      Material.update Mdl msg_ model
 
 
 setNameInput : String -> Model -> ( Model, Cmd Msg )
-setNameInput name model =
-  let
-    person = model.person
-    newPerson = { person | name = name }
-  in
-    ( { model | person = newPerson }, Cmd.none )
+setNameInput name ({ person } as model) =
+  ( { model
+    | person = { person | name = name }
+    }
+  , Cmd.none
+  )
 
 
 handleInputMsg : InputId -> StrengthField.Msg -> Model -> ( Model, Cmd Msg )
@@ -248,16 +248,19 @@ injectStrength code =
 
 view : Model -> Html Msg
 view model =
-  div [ style [ "padding" => "20px" ] ]
+  Html.form
+    [ style [ "padding" => "20px" ]
+    , onSubmit Save
+    ]
     ( [ div []
       [ Textfield.render Mdl [0] model.mdl
         [ Textfield.label "Name"
         , Textfield.floatingLabel
-        , Textfield.onInput NameInput
+        , Options.onInput NameInput
         , Textfield.value <| model.person.name
         , Textfield.autofocus
         , Options.css "width" "100%"
-        ]
+        ] []
       ]
       ]
     ++
@@ -272,14 +275,14 @@ view model =
         [ Button.render Mdl [0] model.mdl
           [ Button.raised
           , Button.ripple
-          , Button.onClick Delete
+          , Options.onClick Delete
           ]
           [ text "Delete" ]
         , Button.render Mdl [1] model.mdl
           [ Button.raised
           , Button.colored
           , Button.ripple
-          , Button.onClick Save
+          , Button.type_ "submit"
           ]
           [ text "Save" ]
         ]

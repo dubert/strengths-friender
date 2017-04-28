@@ -81,7 +81,7 @@ update msg model =
         |> publishError
 
     Mdl msg_ ->
-      Material.update msg_ model
+      Material.update Mdl msg_ model
 
 
 isInputValid : String -> Status
@@ -141,8 +141,8 @@ view model ordinal =
     Textfield.render Mdl [0] model.mdl
       [ Textfield.label (ordinal ++ " Strength")
       , Textfield.floatingLabel
-      , Textfield.onInput Input
+      , Options.onInput Input
       , Textfield.value <| model.field
       , error
       , Options.css "width" "100%"
-      ]
+      ] []
